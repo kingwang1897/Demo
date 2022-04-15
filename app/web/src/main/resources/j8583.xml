@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<j8583-config>
+    <encode>gbk</encode>
+    <!-- J8583 -->
+    <!-- 报文类型 -->
+    <header type="0200">0800</header>
+    <!-- 创建模板 -->
+    <!-- 解析模板 -->
+    <parse type="0800">
+        <field num="7" type="DATE10" length="10" />
+        <field num="11" type="NUMERIC" length="6" />
+        <field num="48" type="LLLLBIN" length="1024" />
+        <field num="53" type="NUMERIC" length="16" />
+        <field num="70" type="NUMERIC" length="3" />
+        <field num="96" type="ALPHA" length="16" />
+        <field num="100" type="LLVAR" length="11" />
+        <field num="128" type="ALPHA" length="16" />
+    </parse>
+</j8583-config>
