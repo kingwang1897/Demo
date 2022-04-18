@@ -1,6 +1,5 @@
 package com.storicard.message.iso8583;
 
-import com.alipay.sofa.util.CommonUtil;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.MessageFactory;
 import com.storicard.message.MessageTester;
@@ -28,12 +27,32 @@ public class TestMessageGeneration {
     }
 
     @Test
-    public void generateAscii0110() throws Exception {
+    public void generateRequestMessage() {
+        IsoMessage msg = mf.newMessage(0x100);
+        String hexString = msg.debugString();
+        logger.info("HEX:{}", hexString);
+        logger.info("ASC1:{}", toCUPSMessageString(hexString));
+        String asciiString = msg.toCupsAsciiHexMessageWithOutHeader();
+        logger.info("ASC2:{}", asciiString);
+        mt.parse(asciiString);
+    }
+
+    @Test
+    public void generateResponseMessage() {
         IsoMessage msg = mf.newMessage(0x110);
         String hexString = msg.debugString();
         logger.info("HEX:{}", hexString);
-        String asciiString = toCUPSMessageString(hexString);
-        logger.info("ASC:{}", asciiString);
+        String asciiString = msg.toCupsAsciiHexMessageWithOutHeader();
+        mt.parse(asciiString);
+    }
+
+    @Test
+    public void generateAscii0110() {
+        IsoMessage msg = mf.newMessage(0x110);
+        String hexString = msg.debugString();
+        logger.info("HEX:{}", hexString);
+        logger.info("ASC:{}", toCUPSMessageString(hexString));
+        String asciiString = msg.toCupsAsciiHexMessageWithOutHeader();
         mt.parse(asciiString);
     }
 
@@ -45,9 +64,15 @@ public class TestMessageGeneration {
 
     @Test
     public void testPlainHexString() throws Exception {
-        mt.parse(toCUPSMessageString("02007020048038C08801166225561620345170280000000000000002000007022082376225561620345170D"));
+        mt.parse(toCUPSMessageString("0200302004c020c0981100000000000000000100013302100012376225885741255749d0000101296490017105603532303739303030303031333332303630313230303033313536e6b52efda2c3f13726000000000000000014220006060006013242414635334638"));
     }
 
+    @Test
+    public void testPlainHexString2() throws Exception {
+        mt.parse(toCUPSMessageString("02004c020c0981100000000000000000100013302100012376225885741255749d0000101296490017105603532303739303030303031333332303630313230303033313536e6b52efda2c3f13726000000000000000014220006060006013242414635334638"));
+    }
+
+    @Deprecated
     public static String toCUPSMessageString(String str) {
         char[] chars = str.toCharArray();
         StringBuffer hex = new StringBuffer();

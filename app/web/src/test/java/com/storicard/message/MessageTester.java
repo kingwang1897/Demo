@@ -11,6 +11,7 @@ public class MessageTester {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     public void parse(String testMessage) {
+        logger.info("iso8583.info parsing {}", testMessage);
         OkHttpClient okHttpClient = new OkHttpClient();
         RequestBody body = new FormBody.Builder()
                 .add("s", testMessage)
