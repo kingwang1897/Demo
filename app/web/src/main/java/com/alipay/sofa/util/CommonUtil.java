@@ -70,4 +70,19 @@ public class CommonUtil {
         }
         return sb.toString();
     }
+
+    /**
+     * judgeBitMap one(false) or two(true)
+     *
+     * @param bitMap
+     * @return
+     */
+    public static boolean judgeBitMap(String bitMap) {
+        if (bitMap.isEmpty()) {
+            return false;
+        }
+
+        Integer bitInteger = Integer.parseInt(bitMap.substring(0, 1), 16);
+        return bitInteger < 7 ? false : true;
+    }
 }
