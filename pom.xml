@@ -33,7 +33,7 @@
             <dependency>
                 <groupId>net.sf.j8583</groupId>
                 <artifactId>j8583</artifactId>
-                <version>1.17.0</version>
+                <version>1.18.1-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
@@ -96,5 +96,6 @@
     </profiles>
 <modules>  <module>app/endpoint</module>
     <module>app/web</module>
-  </modules>
+    <module>j8583</module>
+</modules>
 </project>
