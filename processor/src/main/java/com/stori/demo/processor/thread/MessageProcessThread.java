@@ -1,6 +1,7 @@
 package com.stori.demo.processor.thread;
 
 import com.google.common.base.Throwables;
+import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
 import com.stori.demo.processor.listener.MessageMqSender;
 import com.stori.demo.processor.model.MessageLifecycle;
@@ -45,7 +46,7 @@ public class MessageProcessThread extends Thread {
                     messageProcess(entry.getValue());
                 }
 
-                Thread.sleep(1000);
+                Thread.sleep(500);
             }
         } catch (Exception e) {
             logger.error("MessageProcessThread error, cause by: {}.", Throwables.getStackTraceAsString(e));
@@ -71,6 +72,13 @@ public class MessageProcessThread extends Thread {
                 concurrentHashMap.remove(messageLifecycle.getMessageId());
                 break;
             default:
+                if (messageLifecycle.getCallCount() > Constant.MESSAGE_CALL_RETRY) {
+                    // retry more than 3
+                    logger.error("messageProcess error, cause by: retry more 3 times, status is : {}, messageId is: {}.", messageLifecycle.getStatus().name(), messageLifecycle.getMessageId());
+                    messageLifecycle.setStatus(MessageStatus.FAILURE);
+                    return;
+                }
+
                 if (System.currentTimeMillis() > messageLifecycle.getMessageProcessorTime() + messageLifecycle.getStatus().getTimeout()) {
                     messageLifecycle.setStatus(MessageStatus.getPreStatus(messageLifecycle.getStatus()));
                 }

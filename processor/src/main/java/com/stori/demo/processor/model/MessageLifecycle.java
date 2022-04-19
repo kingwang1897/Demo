@@ -19,6 +19,8 @@ public class MessageLifecycle {
 
     private Long messageProcessorTime;
 
+    private int callCount;
+
     public MessageLifecycle(String messageChannel, String socketId, String messageId, String message) {
         this.messageChannel = messageChannel;
         this.socketId = socketId;
@@ -82,5 +84,13 @@ public class MessageLifecycle {
 
     public void setMessageChannel(String messageChannel) {
         this.messageChannel = messageChannel;
+    }
+
+    public int getCallCount() {
+        return callCount;
+    }
+
+    public void setCallCount(int callCount) {
+        this.callCount = callCount;
     }
 }

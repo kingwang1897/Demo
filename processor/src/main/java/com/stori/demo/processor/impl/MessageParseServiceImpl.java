@@ -29,12 +29,13 @@ public class MessageParseServiceImpl implements MessageParseService {
      */
     @Override
     public MessageLifecycle parsePkt(MessageLifecycle messageLifecycle) {
+        messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+        messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
         String pkt = messageLifecycle.getMessageResult().getPkt();
         int headerLength = parseheader ? Constant.MESSAGE_HEADER_LENGTH_HEX : 0;
         if (pkt.isEmpty() || pkt.length() < headerLength + Constant.MESSAGE_TYPE_ID_LENGTH) {
-            logger.warn("msg is invalid");
-            // 转异常处理 todo
+            logger.error("parsePkt error, case by: msg is invalid, pkt is: {}.", pkt);
             messageLifecycle.setStatus(MessageStatus.FAILURE);
         }
 
@@ -55,6 +56,7 @@ public class MessageParseServiceImpl implements MessageParseService {
         messageResult.setMessageFileds(parseResult.getMessageFileds());
         messageLifecycle.setMessageResult(messageResult);
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+        messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
         return messageLifecycle;
     }
 

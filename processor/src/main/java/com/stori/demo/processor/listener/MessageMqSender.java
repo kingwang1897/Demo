@@ -1,6 +1,7 @@
 package com.stori.demo.processor.listener;
 
 import com.alibaba.fastjson.JSON;
+import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.StoriMessage;
@@ -18,7 +19,9 @@ public class MessageMqSender {
     private MqProducerService mqProducerService;
 
     public void messageSender(MessageLifecycle messageLifecycle) {
+        messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+        messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
 
         // step 1: send message to message
         StoriMessage storiMessage = new StoriMessage();
@@ -27,14 +30,15 @@ public class MessageMqSender {
         storiMessage.setSocketId(messageLifecycle.getSocketId());
         storiMessage.setOriginMessage(messageLifecycle.getMessageResult().getMessage());
         storiMessage.setMessageFileds(messageLifecycle.getMessageResult().getMessageFileds());
-        boolean result = mqProducerService.sendMessage(JSON.toJSONString(storiMessage));
-        if (!result) {
+//        boolean result = mqProducerService.sendMessage(JSON.toJSONString(storiMessage));
+        if (true) {
             logger.error("messageSender error, messageId is :{}.", messageLifecycle.getMessageId());
             return;
         }
 
         // step 2: update status
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+        messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
         System.out.println(JSON.toJSONString(storiMessage));
     }
 }

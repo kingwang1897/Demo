@@ -29,4 +29,8 @@ public class Constant {
     // respone
     public final static String MESSAGE_RESULT_SUCCESS = "00";
     public final static String MESSAGE_RESULT_FAILURE = "01";
+
+    // lifecycle
+    public final static Integer MESSAGE_CALL_INIT = 1;
+    public final static Integer MESSAGE_CALL_RETRY = 4;
 }

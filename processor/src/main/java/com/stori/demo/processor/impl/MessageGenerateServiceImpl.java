@@ -31,7 +31,9 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
     @Override
     public MessageLifecycle generateMsgByXml(MessageLifecycle messageLifecycle) {
         try {
+            messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+            messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
             MessageFactory<IsoMessage> mf = new MessageFactory<IsoMessage>();
             mf.setBinaryHeader(true);
             mf.setForceStringEncoding(true);
@@ -52,6 +54,7 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
             messageLifecycle.setMessageResult(commonMessageGenarate(m));
 
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+            messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
             return messageLifecycle;
         } catch (Exception e) {
             logger.error("generateMsgByXml error,cause by: {}.", Throwables.getStackTraceAsString(e));
