@@ -11,10 +11,12 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 import javax.annotation.Resource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.InputStream;
 import java.net.URL;
 
 @Service
@@ -60,20 +62,16 @@ public class MessageService {
 
 
     public JSONObject loadTemplatesFromResource() {
-        URL resource = this.getClass().getClassLoader().getResource("j8583-templates.xml");
-        return parse(resource.getPath());
-    }
-
-
-    protected JSONObject parse(String uri) {
-        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-        try {
+        URL url = this.getClass().getClassLoader().getResource("j8583-templates.xml");
+        try (InputStream stream = url.openStream()) {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            logger.info("load message templates from : {}", url);
             DocumentBuilder builder = factory.newDocumentBuilder();
-            Document doc = builder.parse(uri);
+            Document doc = builder.parse(new InputSource(stream));
             final Element root = doc.getDocumentElement();
             return parseTemplates(root.getElementsByTagName("template"));
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("error occur when load xml templates",e);
             return null;
         }
     }
