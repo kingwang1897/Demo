@@ -50,6 +50,7 @@ public class MessageController {
         resp.put("requestInfo", info);
         resp.put("response", "key:value");
         resp.put("responseHex", "origin str from output");
+        resp.put("responseInfo", "response info");
         return resp;
     }
 
