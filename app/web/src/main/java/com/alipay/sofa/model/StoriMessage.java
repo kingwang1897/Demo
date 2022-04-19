@@ -11,9 +11,14 @@ public class StoriMessage {
     private String messageChannel;
 
     /**
-     * socketId
+     * socketId : match the connection from the client
      */
     private String socketId;
+
+    /**
+     * messageId : match the in and out message
+     */
+    private String messageId;
 
     /**
      * 原始请求报文
@@ -34,6 +39,14 @@ public class StoriMessage {
 
     public void setSocketId(String socketId) {
         this.socketId = socketId;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
 
     public String getOriginMessage() {
