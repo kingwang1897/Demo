@@ -128,6 +128,14 @@
                 <el-row style="margin-bottom: 50px">
                     <el-button type="primary" v-loading="loading" @click="submitForm">Send</el-button>
                 </el-row>
+                <el-row style="margin-bottom: 50px">
+                    Console:
+                    <br/>
+                    <div style="border: 1px solid gray">
+                    <pre v-for="(i,k) in info">{{k + "." + i}}</pre>
+                    </div>
+
+                </el-row>
             </el-col>
         </el-row>
     </div>
@@ -167,6 +175,7 @@
                 response: {},
                 request: {},
                 fields: [],
+                info: [],
                 options: [],
                 multipleSelection: [],
                 rules: {
@@ -223,10 +232,12 @@
             submitForm() {
                 const _this = this;
                 _this.loading = true
+                _this.info.push("send message:" + JSON.stringify(this.request))
                 axios.post("/message/json", this.request)
                     .then(function (response) {
                         _this.loading = false
                         // response not implement yet
+                        _this.info.push("receive message:" + JSON.stringify(response.data))
                         _this.response = response.data.request
                     })
                     .catch(function (error) {

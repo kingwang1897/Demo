@@ -5,6 +5,7 @@ import com.alipay.sofa.constant.IsoFields;
 import com.alipay.sofa.entrance.web.service.MessageService;
 import com.alipay.sofa.model.StoriMessage;
 import com.alipay.sofa.mq.producer.service.MqProducerService;
+import com.alipay.sofa.util.MessageTester;
 import com.solab.iso8583.IsoMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +25,8 @@ public class MessageController {
 
     @Resource
     private MessageService messageService;
+    @Resource
+    private MessageTester defaultMessageTester;
     // TODO
     // Processing Component
 
@@ -52,9 +55,12 @@ public class MessageController {
         // receive result from the output
 
         // return resp to front
+        String hex = isoMessage.toCupsAsciiHexMessageWithOutHeader();
+        String info = defaultMessageTester.parse(hex);
         JSONObject resp = new JSONObject();
         resp.put("request", request);
-        resp.put("requestHex", isoMessage.toCupsAsciiHexMessageWithOutHeader());
+        resp.put("requestHex", hex);
+        resp.put("requestInfo", info);
         resp.put("response", "key:value");
         resp.put("responseHex", "origin str from output");
         return resp;
