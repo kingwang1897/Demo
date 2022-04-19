@@ -1,14 +1,16 @@
-package com.alipay.sofa.impl;
+package com.stori.demo.processor.impl;
 
-import com.alipay.sofa.constant.Constant;
-import com.alipay.sofa.model.HelpResult;
-import com.alipay.sofa.model.MessageResult;
-import com.alipay.sofa.service.MessageGenerateService;
-import com.alipay.sofa.util.CommonUtil;
 import com.google.common.base.Throwables;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import com.solab.iso8583.MessageFactory;
+import com.stori.demo.processor.constant.Constant;
+import com.stori.demo.processor.constant.MessageStatus;
+import com.stori.demo.processor.model.HelpResult;
+import com.stori.demo.processor.model.MessageLifecycle;
+import com.stori.demo.processor.model.MessageResult;
+import com.stori.demo.processor.service.MessageGenerateService;
+import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,30 +25,34 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
      * @return
      */
     @Override
-    public HelpResult<MessageResult> generateMsgByXml(MessageResult requestMessage, HelpResult result) {
+    public MessageLifecycle generateMsgByXml(MessageLifecycle messageLifecycle) {
         try {
+            messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
             MessageFactory<IsoMessage> mf = new MessageFactory<IsoMessage>();
             mf.setBinaryHeader(true);
             mf.setForceStringEncoding(true);
             mf.setConfigPath("j8583-templates-response.xml");
 
-            Integer messageType = Integer.parseInt(CommonUtil.convertHexToString(requestMessage.getType()), 16) + 16;
+            Integer messageType = Integer.parseInt(CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType()), 16) + 16;
             IsoMessage m = mf.newMessage(messageType);
-            m.setIsoHeader(requestMessage.getHeader());
+            m.setIsoHeader(messageLifecycle.getMessageResult().getHeader());
             m.setForceSecondaryBitmap(true);
             for (int i = 2; i <= 128; i++) {
                 if (m.hasField(i)) {
-                    m.setValue(i, requestMessage.getFields()[i], m.getField(i).getType(), m.getField(i).getLength());
+                    m.setValue(i, messageLifecycle.getMessageResult().getFields()[i], m.getField(i).getType(), m.getField(i).getLength());
                 }
             }
 
-            m.setValue(38, result.isSuccess() ? result.getData() : "0" , IsoType.ALPHA, 6);
-            m.setValue(39, result.isSuccess() ? Constant.MESSAGE_RESULT_SUCCESS : Constant.MESSAGE_RESULT_FAILURE, IsoType.ALPHA, 2);
+            m.setValue(38, messageLifecycle.getHelpResult().isSuccess() ? messageLifecycle.getHelpResult().getData() : "0" , IsoType.ALPHA, 6);
+            m.setValue(39, messageLifecycle.getHelpResult().isSuccess() ? Constant.MESSAGE_RESULT_SUCCESS : Constant.MESSAGE_RESULT_FAILURE, IsoType.ALPHA, 2);
+            messageLifecycle.setMessageResult(commonMessageGenarate(m));
 
-            return HelpResult.ok(commonMessageGenarate(m));
+            messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+            return messageLifecycle;
         } catch (Exception e) {
             logger.error("generateMsgByXml error,cause by: {}.", Throwables.getStackTraceAsString(e));
-            return  HelpResult.fail("error.generate.msg");
+            messageLifecycle.setStatus(MessageStatus.getPreStatus(messageLifecycle.getStatus()));
+            return  messageLifecycle;
         }
     }
 

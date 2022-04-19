@@ -1,13 +1,15 @@
-package com.alipay.sofa.impl;
+package com.stori.demo.processor.impl;
 
-import com.alipay.sofa.constant.Constant;
-import com.alipay.sofa.model.MessageResult;
-import com.alipay.sofa.service.MessageParseService;
-import com.alipay.sofa.util.CommonUtil;
 import com.google.common.base.Throwables;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.MessageFactory;
 import com.solab.iso8583.parse.ConfigParser;
+import com.stori.demo.processor.constant.Constant;
+import com.stori.demo.processor.constant.MessageStatus;
+import com.stori.demo.processor.model.MessageLifecycle;
+import com.stori.demo.processor.model.MessageResult;
+import com.stori.demo.processor.service.MessageParseService;
+import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -22,10 +24,13 @@ public class MessageParseServiceImpl implements MessageParseService {
      * @return
      */
     @Override
-    public MessageResult parsePkt(String pkt) {
+    public MessageLifecycle parsePkt(MessageLifecycle messageLifecycle) {
+        messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+        String pkt = messageLifecycle.getMessageResult().getPkt();
         if (pkt.isEmpty() || pkt.length() < Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH) {
             logger.warn("msg is invalid");
             // 转异常处理 todo
+            messageLifecycle.setStatus(MessageStatus.FAILURE);
         }
 
         Integer bitMapLength = CommonUtil.judgeBitMap(pkt.substring(Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH)) ? Constant.MESSAGE_BIT_MAP_LENGTH_EXTEND : Constant.MESSAGE_BIT_MAP_LENGTH;
@@ -43,7 +48,9 @@ public class MessageParseServiceImpl implements MessageParseService {
 
         MessageResult parseResult = parseMsgByConfig(stringBuffer.toString(), Constant.MESSAGE_HEADER_LENGTH_HEX);
         messageResult.setFields(parseResult.getFields());
-        return messageResult;
+        messageLifecycle.setMessageResult(messageResult);
+        messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+        return messageLifecycle;
     }
 
     /**

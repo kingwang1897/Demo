@@ -1,7 +1,9 @@
-package com.alipay.sofa.service;
+package com.stori.demo.processor.service;
 
-import com.alipay.sofa.model.HelpResult;
-import com.alipay.sofa.model.MessageResult;
+
+import com.stori.demo.processor.model.HelpResult;
+import com.stori.demo.processor.model.MessageLifecycle;
+import com.stori.demo.processor.model.MessageResult;
 
 /**
  * Message Generate
@@ -13,7 +15,7 @@ public interface MessageGenerateService {
      *
      * @return
      */
-    HelpResult<MessageResult> generateMsgByXml(MessageResult messageResult, HelpResult result);
+    MessageLifecycle generateMsgByXml(MessageLifecycle messageLifecycle);
 
     /**
      * generate by config

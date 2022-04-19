@@ -2,7 +2,7 @@ package com.stori.demo.processor.mq.consumer.handler;
 
 import com.alibaba.fastjson.JSON;
 import com.stori.demo.processor.core.service.MessageProcessService;
-import com.stori.demo.processor.mode.StoriMessage;
+import com.stori.demo.processor.model.StoriMessage;
 import com.stori.demo.processor.mq.consumer.service.impl.AbstractConsumerServiceImpl;
 import com.stori.demo.processor.mq.producer.service.MqProducerService;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;

@@ -1,6 +1,8 @@
-package com.alipay.sofa.service;
+package com.stori.demo.processor.service;
 
-import com.alipay.sofa.model.MessageResult;
+
+import com.stori.demo.processor.model.MessageLifecycle;
+import com.stori.demo.processor.model.MessageResult;
 
 public interface MessageParseService {
 
@@ -9,7 +11,7 @@ public interface MessageParseService {
      *
      * @return
      */
-    MessageResult parsePkt(String pkt);
+    MessageLifecycle parsePkt(MessageLifecycle messageLifecycle);
 
     /**
      * parse header from pkt

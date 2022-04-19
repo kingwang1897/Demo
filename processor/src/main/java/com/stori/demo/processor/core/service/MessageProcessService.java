@@ -1,6 +1,6 @@
 package com.stori.demo.processor.core.service;
 
-import com.stori.demo.processor.mode.StoriMessage;
+import com.stori.demo.processor.model.StoriMessage;
 
 /**
  * 交易报文处理服务

@@ -1,4 +1,4 @@
-package com.stori.demo.processor.mode;
+package com.stori.demo.processor.model;
 
 /**
  * 写入消息队列的，封装后的消息。后续可以考虑增加其他字段或者完全将originMessage解析

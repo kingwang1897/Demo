@@ -1,6 +1,8 @@
-package com.alipay.sofa.model;
+package com.stori.demo.processor.model;
 
 public class MessageResult {
+
+    private String pkt;
 
     private String header;
 
@@ -11,6 +13,14 @@ public class MessageResult {
     private String messageData;
 
     private String[] fields = new String[129];
+
+    public String getPkt() {
+        return pkt;
+    }
+
+    public void setPkt(String pkt) {
+        this.pkt = pkt;
+    }
 
     public String getHeader() {
         return header;

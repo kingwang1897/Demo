@@ -1,4 +1,4 @@
-package com.alipay.sofa.model;
+package com.stori.demo.processor.model;
 
 
 public class HelpResult<T> {
