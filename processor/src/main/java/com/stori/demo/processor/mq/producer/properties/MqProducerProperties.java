@@ -1,14 +1,23 @@
-package com.stori.demo.processor.mq.consumer.properties;
+package com.stori.demo.processor.mq.producer.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * mq producer配置
+ */
 @Configuration
-@ConfigurationProperties(prefix = "spring.rocketmq.consumer")
-public class MqConsumerProperties {
+@ConfigurationProperties(prefix = "spring.rocketmq.producer")
+public class MqProducerProperties {
 
+    /**
+     * namesrv地址
+     */
     private String namesrvAddr;
 
+    /**
+     * group
+     */
     private String group;
 
     public String getNamesrvAddr() {
