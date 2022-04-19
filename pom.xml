@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.alipay.sofa</groupId>
         <artifactId>sofaboot-dependencies</artifactId>
-        <version>3.9.0</version>
+        <version>3.11.1</version>
     </parent>
 
     <groupId>com.alipay.sofa</groupId>
@@ -94,10 +94,7 @@
             </pluginRepositories>
         </profile>
     </profiles>
-
-<modules>
-
-    <module>app/endpoint</module>
+<modules>  <module>app/endpoint</module>
     <module>app/web</module>
     <module>j8583</module>
 </modules>

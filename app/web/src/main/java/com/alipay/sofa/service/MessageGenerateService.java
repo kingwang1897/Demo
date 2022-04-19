@@ -13,12 +13,12 @@ public interface MessageGenerateService {
      *
      * @return
      */
-    MessageResult generateMsgByXml(MessageResult messageResult, HelpResult result);
+    HelpResult<MessageResult> generateMsgByXml(MessageResult messageResult, HelpResult result);
 
     /**
      * generate by config
      *
      * @return
      */
-    String generateMsgByConfig(MessageResult messageResult, HelpResult result);
+    HelpResult<MessageResult> generateMsgByConfig(MessageResult messageResult, HelpResult result);
 }
