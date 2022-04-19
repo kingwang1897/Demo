@@ -1,4 +1,4 @@
-package com.storicard.message;
+package com.alipay.sofa.util;
 
 import okhttp3.*;
 import org.slf4j.Logger;
@@ -10,7 +10,7 @@ public class MessageTester {
     private final String url;
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public void parse(String testMessage) {
+    public String parse(String testMessage) {
         logger.info("iso8583.info parsing {}", testMessage);
         OkHttpClient okHttpClient = new OkHttpClient();
         RequestBody body = new FormBody.Builder()
@@ -47,13 +47,16 @@ public class MessageTester {
             logger.info("iso8583.info Res:{}", response);
             String m = response.body().string();
             if (m.contains("textarea")) {
-                logger.info("iso8583.info Parsed: {}", m.split("<.*textarea.*>?")[1]);
+                String analysis = m.split("<.*textarea.*>?")[1];
+                logger.info("iso8583.info Parsed: {}", analysis);
+                return analysis;
             } else {
                 logger.error("iso8583.info Parsed not found please change cookie.");
             }
         } catch (IOException e) {
             logger.error("iso8583.info test error:", e);
         }
+        return "nothing found";
     }
 
     public static Builder newBuilder() {
@@ -67,7 +70,7 @@ public class MessageTester {
     public static final class Builder {
         private String url;
 
-        public MessageTester.Builder url(String url) {
+        public Builder url(String url) {
             this.url = url;
             return this;
         }

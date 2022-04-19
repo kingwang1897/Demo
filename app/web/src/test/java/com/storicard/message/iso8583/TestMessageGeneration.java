@@ -1,8 +1,8 @@
 package com.storicard.message.iso8583;
 
+import com.alipay.sofa.util.MessageTester;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.MessageFactory;
-import com.storicard.message.MessageTester;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
