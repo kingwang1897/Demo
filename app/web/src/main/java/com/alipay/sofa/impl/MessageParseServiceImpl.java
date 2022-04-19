@@ -24,8 +24,8 @@ public class MessageParseServiceImpl implements MessageParseService {
     @Override
     public MessageResult parsePkt(String pkt) {
         if (pkt.isEmpty() || pkt.length() < Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH) {
-                logger.warn("msg is invalid");
-                // 转异常处理 todo
+            logger.warn("msg is invalid");
+            // 转异常处理 todo
         }
 
         Integer bitMapLength = CommonUtil.judgeBitMap(pkt.substring(Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH)) ? Constant.MESSAGE_BIT_MAP_LENGTH_EXTEND : Constant.MESSAGE_BIT_MAP_LENGTH;
@@ -97,30 +97,6 @@ public class MessageParseServiceImpl implements MessageParseService {
         return null;
     }
 
-
-    public static void parseMessage(String message) throws Exception{
-        //初始化获取解析配置文件j8583.xml
-        MessageFactory messageFactory = ConfigParser.createDefault();
-        //与组包一致
-        messageFactory.setBinaryHeader(true);
-        messageFactory.setBinaryFields(false);
-        messageFactory.setUseBinaryBitmap(false);
-        messageFactory.setForceStringEncoding(true);
-        messageFactory.setUseBinaryMessages(false);
-
-        String messageData = CommonUtil.convertHexToString(message.substring(92 + 8 + 32));
-        StringBuffer stringBuffer = new StringBuffer();
-        stringBuffer.append(message.substring(0, 92))
-                .append(CommonUtil.convertHexToString(message.substring(92, 92 + 8)))
-                .append(message.substring(92 + 8, 92 + 8 +  32))
-                .append(messageData);
-        System.out.println(stringBuffer.toString());
-
-        //解析报文
-        IsoMessage isoMessage = messageFactory.parseMessage(stringBuffer.toString().getBytes(), 92, true);
-//        print(isoMessage);
-    }
-
     /**
      * parse msg by config
      *
@@ -128,14 +104,7 @@ public class MessageParseServiceImpl implements MessageParseService {
      */
     private MessageResult parseMsgByConfig(String msg, int headerLength) {
         try {
-//            // 判断msg的位图，是1个还是2个
-//            if (msg.isEmpty() || msg.length() < Constant.MESSAGE_TYPE_ID_LENGTH) {
-//                logger.warn("msg is invalid");
-//                // 转异常处理 todo
-//            }
-
-            MessageFactory messageFactory = ConfigParser.createFromClasspathConfig("0800.xml");
-//            messageFactory.setBinaryHeader(CommonUtil.judgeBitMap(msg));
+            MessageFactory messageFactory = ConfigParser.createFromClasspathConfig("j8583-templates-request.xml");
             messageFactory.setCharacterEncoding("gbk");
             messageFactory.setForceStringEncoding(true);
 
@@ -153,6 +122,7 @@ public class MessageParseServiceImpl implements MessageParseService {
 
             return messageResult;
         } catch (Exception e) {
+            System.out.println(Throwables.getStackTraceAsString(e));
             logger.error("parseMsgByConfig error, cause by: {}.", Throwables.getStackTraceAsString(e));
             return null;
         }
