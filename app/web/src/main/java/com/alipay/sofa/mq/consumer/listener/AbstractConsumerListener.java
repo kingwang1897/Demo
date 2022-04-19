@@ -1,6 +1,6 @@
-package com.stori.demo.processor.mq.consumer.listener;
+package com.alipay.sofa.mq.consumer.listener;
 
-import com.stori.demo.processor.mq.consumer.properties.MqConsumerProperties;
+import com.alipay.sofa.mq.consumer.properties.MqConsumerProperties;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;

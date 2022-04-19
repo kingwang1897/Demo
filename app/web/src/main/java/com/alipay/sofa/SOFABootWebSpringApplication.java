@@ -32,27 +32,27 @@ public class SOFABootWebSpringApplication {
         //调用 SOFARest 服务
         final SampleRestFacade sampleRestFacade = referenceHolder.getSampleRestFacade();
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    try {
-                        String response = sampleRestFacade.hello();
-                        printMsg("Response from myserver-app.rest: " + response);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        try {
-                            TimeUnit.SECONDS.sleep(3);
-                        } catch (InterruptedException e) {
-                            //ignore
-                        }
-                    }
-
-                }
-
-            }
-        }).start();
+//        new Thread(new Runnable() {
+//            @Override
+//            public void run() {
+//                while (true) {
+//                    try {
+//                        String response = sampleRestFacade.hello();
+//                        printMsg("Response from myserver-app.rest: " + response);
+//                    } catch (Exception e) {
+//                        e.printStackTrace();
+//                    } finally {
+//                        try {
+//                            TimeUnit.SECONDS.sleep(3);
+//                        } catch (InterruptedException e) {
+//                            //ignore
+//                        }
+//                    }
+//
+//                }
+//
+//            }
+//        }).start();
 
     }
 

@@ -4,7 +4,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix = "rocketmq.consumer")
+@ConfigurationProperties(prefix = "spring.rocketmq.consumer")
 public class MqConsumerProperties {
 
     private String namesrvAddr;

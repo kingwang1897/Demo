@@ -1,7 +1,7 @@
-package com.stori.demo.processor.mq.consumer.listener;
+package com.alipay.sofa.mq.consumer.listener;
 
-import com.stori.demo.processor.mq.consumer.enums.MqConsumerBeanEnum;
-import com.stori.demo.processor.mq.consumer.service.MqConsumerService;
+import com.alipay.sofa.mq.consumer.enums.MqConsumerBeanEnum;
+import com.alipay.sofa.mq.consumer.service.MqConsumerService;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.exception.MQClientException;
 import org.apache.rocketmq.common.message.MessageExt;
@@ -73,7 +73,7 @@ public class DefaultConsumerListener extends AbstractConsumerListener implements
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         try {
-            super.listener("REQUEST_QUEUE", "tag");
+            super.listener("RESPONSE_QUEUE", "tag");
         } catch (MQClientException e) {
             LOGGER.error("consumer error");
         }
