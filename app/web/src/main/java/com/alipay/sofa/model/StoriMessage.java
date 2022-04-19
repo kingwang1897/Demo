@@ -1,5 +1,7 @@
 package com.alipay.sofa.model;
 
+import java.util.Map;
+
 /**
  * 写入消息队列的，封装后的消息。后续可以考虑增加其他字段或者完全将originMessage解析
  */
@@ -24,6 +26,11 @@ public class StoriMessage {
      * 原始请求报文
      */
     private String originMessage;
+
+    /**
+     * 报文域信息
+     */
+    private Map<Integer, String> messageFileds;
 
     public String getMessageChannel() {
         return messageChannel;
@@ -55,5 +62,13 @@ public class StoriMessage {
 
     public void setOriginMessage(String originMessage) {
         this.originMessage = originMessage;
+    }
+
+    public Map<Integer, String> getMessageFileds() {
+        return messageFileds;
+    }
+
+    public void setMessageFileds(Map<Integer, String> messageFileds) {
+        this.messageFileds = messageFileds;
     }
 }

@@ -1,5 +1,7 @@
 package com.stori.demo.processor.model;
 
+import java.util.Map;
+
 public class MessageResult {
 
     private String pkt;
@@ -12,7 +14,7 @@ public class MessageResult {
 
     private String messageData;
 
-    private String[] fields = new String[129];
+    private Map<Integer, String> messageFileds;
 
     public String getPkt() {
         return pkt;
@@ -54,12 +56,12 @@ public class MessageResult {
         this.messageData = messageData;
     }
 
-    public String[] getFields() {
-        return fields;
+    public Map<Integer, String> getMessageFileds() {
+        return messageFileds;
     }
 
-    public void setFields(String[] fields) {
-        this.fields = fields;
+    public void setMessageFileds(Map<Integer, String> messageFileds) {
+        this.messageFileds = messageFileds;
     }
 
     public String getMessage() {

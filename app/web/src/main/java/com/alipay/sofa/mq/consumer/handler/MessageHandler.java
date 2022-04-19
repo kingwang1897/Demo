@@ -1,10 +1,9 @@
-package com.stori.demo.processor.mq.consumer.handler;
+package com.alipay.sofa.mq.consumer.handler;
 
 import com.alibaba.fastjson.JSON;
-import com.stori.demo.processor.core.service.MessageProcessService;
-import com.stori.demo.processor.model.StoriMessage;
-import com.stori.demo.processor.mq.consumer.service.impl.AbstractConsumerServiceImpl;
-import com.stori.demo.processor.mq.producer.service.MqProducerService;
+import com.alipay.sofa.entrance.socket.WebSocketMessageHandler;
+import com.alipay.sofa.model.StoriMessage;
+import com.alipay.sofa.mq.consumer.service.impl.AbstractConsumerServiceImpl;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +19,7 @@ public class MessageHandler extends AbstractConsumerServiceImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageHandler.class);
 
     @Autowired
-    private MqProducerService mqProducerService;
-
-    @Autowired
-    private MessageProcessService messageProcessService;
-
+    private WebSocketMessageHandler webSocketMessageHandler;
     /**
      * 消息处理
      */
@@ -35,11 +30,7 @@ public class MessageHandler extends AbstractConsumerServiceImpl {
             // 反json序列号请求报文
             StoriMessage storiMessage = JSON.parseObject(msg, StoriMessage.class);
 
-            // 请求报文解析、校验、生成响应报文
-            messageProcessService.createResponse(storiMessage);
-//
-//            // 响应报文写入消息队列
-//            boolean sendResult = mqProducerService.sendMessage(JSON.toJSONString(response));
+            webSocketMessageHandler.handleResponse(storiMessage);
         } catch (Exception e) {
             LOGGER.error("处理失败:{}", e);
             return ConsumeConcurrentlyStatus.RECONSUME_LATER;
