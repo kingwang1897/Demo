@@ -16,18 +16,21 @@ public class MessageMqSender {
 
     public void messageSender(MessageLifecycle messageLifecycle) {
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-        // step 1: send message to message
 
+        // step 1: send message to message
         StoriMessage storiMessage = new StoriMessage();
         storiMessage.setMessageChannel(messageLifecycle.getMessageId());
+        storiMessage.setMessageId(messageLifecycle.getMessageId());
         storiMessage.setSocketId(messageLifecycle.getSocketId());
         storiMessage.setOriginMessage(messageLifecycle.getMessageResult().getMessage());
+        storiMessage.setMessageFileds(messageLifecycle.getMessageResult().getMessageFileds());
         boolean result = mqProducerService.sendMessage(JSON.toJSONString(storiMessage));
         if (!result) {
             return;
         }
 
-        // step 1: update status
+        // step 2: update status
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+        System.out.println(JSON.toJSONString(storiMessage));
     }
 }

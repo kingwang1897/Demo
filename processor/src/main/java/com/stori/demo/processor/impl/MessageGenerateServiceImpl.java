@@ -13,11 +13,15 @@ import com.stori.demo.processor.service.MessageGenerateService;
 import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service("messageGenerateService")
 public class MessageGenerateServiceImpl implements MessageGenerateService {
     protected final Logger logger = LoggerFactory.getLogger(MessageGenerateServiceImpl.class);
+
+    @Value("${message.parse.header}")
+    private boolean parseheader;
 
     /**
      * generate by xml
@@ -39,7 +43,7 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
             m.setForceSecondaryBitmap(true);
             for (int i = 2; i <= 128; i++) {
                 if (m.hasField(i)) {
-                    m.setValue(i, messageLifecycle.getMessageResult().getFields()[i], m.getField(i).getType(), m.getField(i).getLength());
+                    m.setValue(i, messageLifecycle.getMessageResult().getMessageFileds().get(i), m.getField(i).getType(), m.getField(i).getLength());
                 }
             }
 
@@ -85,13 +89,15 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
     }
 
     private MessageResult commonMessageGenarate(IsoMessage m) {
+        int headerLength = parseheader ? Constant.MESSAGE_HEADER_LENGTH_HEX : 0;
         MessageResult responseMessage = new MessageResult();
         responseMessage.setHeader(m.getIsoHeader());
         responseMessage.setType(CommonUtil.convertStringToHex(m.debugString().substring(m.getIsoHeader().length(), m.getIsoHeader().length() + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII)));
-        Integer bitMapLength = CommonUtil.judgeBitMap(m.debugString().substring(Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII)) ? Constant.MESSAGE_BIT_MAP_LENGTH_EXTEND : Constant.MESSAGE_BIT_MAP_LENGTH;
+        Integer bitMapLength = CommonUtil.judgeBitMap(m.debugString().substring(headerLength + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII)) ? Constant.MESSAGE_BIT_MAP_LENGTH_EXTEND : Constant.MESSAGE_BIT_MAP_LENGTH;
         responseMessage.setBitMap(m.debugString().substring(m.getIsoHeader().length() + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII,
                 m.getIsoHeader().length() + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII + bitMapLength));
         responseMessage.setMessageData(CommonUtil.convertStringToHex(m.debugString().substring(m.getIsoHeader().length() + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII + bitMapLength)));
+        responseMessage.setMessageFileds(CommonUtil.convertMap(m));
         return responseMessage;
     }
 }

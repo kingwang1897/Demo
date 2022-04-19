@@ -22,12 +22,13 @@ public class MessageMqListener implements MessageProcessService {
     @Override
     public StoriMessage createResponse(StoriMessage request) {
         // step 2: put message to processor
-        MessageLifecycle messageLifecycle = new MessageLifecycle(request.getSocketId(), request.getMessageChannel(), request.getOriginMessage());
+        MessageLifecycle messageLifecycle = new MessageLifecycle(request.getMessageChannel(), request.getSocketId(), request.getMessageChannel(), request.getOriginMessage());
         messageManager.addMessage(messageLifecycle);
 
         StoriMessage storiMessage = new StoriMessage();
-        storiMessage.setSocketId(request.getSocketId());
         storiMessage.setMessageChannel(request.getMessageChannel());
+        storiMessage.setMessageId(request.getMessageId());
+        storiMessage.setSocketId(request.getSocketId());
         return storiMessage;
     }
 }
