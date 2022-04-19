@@ -1,4 +1,4 @@
-package com.stori.demo.processor.impl;
+package com.alipay.sofa.impl;
 
 
 import com.alipay.sofa.endpoint.facade.SampleRestFacade;
