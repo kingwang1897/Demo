@@ -79,12 +79,13 @@
             </el-option>
         </el-select>
         Transactions:
-        <el-select v-model="selectMessage" @change="v=>request=v.message" placeholder="Select a transaction">
+        <el-select v-model="selectMessage" @change="messageId=>request=requests[messageId].message"
+                   placeholder="Select a transaction">
             <el-option
                     v-for="item in requests"
                     :key="item.messageId"
-                    :label="item.messageId"
-                    :value="item">
+                    :label="item.messageId + ':'+item.status"
+                    :value="item.messageId">
             </el-option>
         </el-select>
 
@@ -158,7 +159,7 @@
                 <el-row style="margin-bottom: 20px">
                     Console:
                     <br/>
-                    <div style="border: 1px solid gray;width: 100%;min-height: 420px;max-height: 420px;text-align: left;overflow-x: auto !important;overflow-y: auto !important"
+                    <div style="border: 1px solid gray;width: 100%;height: 600px;text-align: left;overflow-x: auto !important;overflow-y: auto !important"
                          ref="chatScroll">
                         <div v-for="(v,k) in info" style="text-align: left">
                             <div style="text-align: left">
@@ -168,7 +169,8 @@
                             <div v-else>
                                 <pre> <span class="log">request:</span><br/>{{JSON.stringify(v.message.request, null, 2)}}</pre>
                                 <pre> <span class="log">requestHex:</span><br/>{{ v.message.requestHex }}</pre>
-                                <pre> <span class="log">request.info:</span><br/>{{v.message.requestInfo.trim()}}</pre>
+                                <pre> <span
+                                        class="log">request.info:</span><br/>{{v.message.requestInfo && v.message.requestInfo.trim()}}</pre>
                                 <pre> <span
                                         class="log">response:</span><br/>{{JSON.stringify(v.message.response, null, 2)}}</pre>
                                 <pre> <span class="log">responseHex:</span><br/>{{ v.message.responseHex }}</pre>
@@ -178,6 +180,7 @@
                         </div>
                     </div>
                 </el-row>
+                {{info}}
             </el-col>
         </el-row>
     </div>
@@ -213,14 +216,25 @@
                 return uuid;
             },
             processEvent(evt) {
-                console.log("received:", evt)
-                const message = JSON.parse(evt)
-                if (message.code == 10002) {
+                const response = JSON.parse(evt.data)
+                console.log("received:", response)
+                if (response.code == 10002) {
+                    console.log("message :", response)
+                    if (this.requests[response.messageId].status == "Pending") {
+                        this.requests[response.messageId].status = "Done"
+                        this.response = response.data.response
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            message: `received a timed out message:${response.messageId},discard!`
+                        })
+                    }
                     this.info.push({
                         type: 'recv',
                         time: this.formatDate(new Date()),
-                        message: message
+                        message: response.data
                     })
+                    this.chatScrollTop()
                 }
             },
             createWebSocket: function (socketId) {
@@ -301,6 +315,7 @@
                 }
                 // that.loading = true
                 that.chatScrollTop()
+                that.response = {}
                 if (this.post) {
                     that.postRequest()
                 } else {
@@ -356,6 +371,7 @@
                             message: response.data
                         })
                         that.chatScrollTop()
+                        // TODO For debug ,need replace response
                         that.response = response.data.request
                     })
                     .catch(function (error) {

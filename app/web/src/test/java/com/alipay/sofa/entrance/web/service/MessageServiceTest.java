@@ -3,12 +3,12 @@ package com.alipay.sofa.entrance.web.service;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.sofa.util.MessageTester;
-import com.alipay.sofa.web.test.base.AbstractTestBaseNoWeb;
+import com.alipay.sofa.web.test.base.AbstractTestBase;
 import org.junit.Test;
 
 import javax.annotation.Resource;
 
-public class MessageServiceTest extends AbstractTestBaseNoWeb {
+public class MessageServiceTest extends AbstractTestBase {
 
     @Resource
     private MessageService messageService;

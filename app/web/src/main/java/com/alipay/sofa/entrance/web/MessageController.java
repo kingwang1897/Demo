@@ -9,17 +9,20 @@ import com.alipay.sofa.util.MessageTester;
 import com.solab.iso8583.IsoMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.Objects;
 
 @RestController
-public class MessageController {
+public class MessageController implements InitializingBean {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -27,11 +30,20 @@ public class MessageController {
     private MessageService messageService;
     @Resource
     private MessageTester defaultMessageTester;
-    // TODO
-    // Processing Component
 
     @Autowired
     private MqProducerService mqProducerService;
+
+    private JSONObject templates;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        this.templates = messageService.loadTemplatesFromResource();
+        System.out.println("load templates " + this.templates);
+        if (Objects.isNull(this.templates)) {
+            throw new RuntimeException("load templates failed.");
+        }
+    }
 
     @PostMapping("/message/json")
     public JSONObject handleJson(@RequestBody JSONObject request) {
@@ -83,7 +95,7 @@ public class MessageController {
 
     @GetMapping("/message/templates")
     public JSONObject templates() throws IOException {
-        return messageService.loadTemplatesFromResource();
+        return this.templates;
     }
 }
 

@@ -71,7 +71,8 @@ public class MessageService {
             final Element root = doc.getDocumentElement();
             return parseTemplates(root.getElementsByTagName("template"));
         } catch (Exception e) {
-            logger.error("error occur when load xml templates",e);
+            e.printStackTrace();
+            logger.error("error occur when load xml templates", e);
             return null;
         }
     }

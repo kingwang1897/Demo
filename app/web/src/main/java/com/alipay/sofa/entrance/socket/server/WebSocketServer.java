@@ -51,7 +51,9 @@ public class WebSocketServer {
         }
         webSocketMap.put(socketId, this);
         logger.info("connect:" + socketId + ",online:" + getOnlineCount());
-        sendMessage("success");
+        JSONObject notice = new JSONObject();
+        notice.put("code", 10000);
+        sendMessage(notice.toJSONString());
     }
 
 

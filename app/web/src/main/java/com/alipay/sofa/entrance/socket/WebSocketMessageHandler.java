@@ -46,18 +46,27 @@ public class WebSocketMessageHandler {
         }
         // TODO for debug, need remove after processing service completed.
         String info = defaultMessageTester.parse(hex);
-        JSONObject resp = new JSONObject();
+
+        JSONObject response = (JSONObject) message.clone();
+        response.put("0", "0110");
+        response.put("38", "123323");
+        response.put("39", "00");
+
         JSONObject respMessage = new JSONObject();
-        resp.put("code", 10002);
-        respMessage.put("request", request);
+        respMessage.put("request", message);
         respMessage.put("requestHex", hex);
         respMessage.put("requestInfo", info);
-        respMessage.put("response", "key:value");
+        // put response
+        respMessage.put("response", response);
         respMessage.put("responseHex", "origin str from output");
         respMessage.put("responseInfo", "response info");
-        resp.put("message", respMessage);
-        WebSocketServer.sendMessage(socketId, JSON.toJSONString(resp));
-        // Debug End
+
+        JSONObject responseBody = new JSONObject();
+        responseBody.put("code", 10002);
+        responseBody.put("messageId", messageId);
+        responseBody.put("data", respMessage);
+        WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+        // debug End
     }
 
     public void handleResponse(StoriMessage storiMessage) {
