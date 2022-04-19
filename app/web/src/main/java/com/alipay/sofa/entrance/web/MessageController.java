@@ -3,10 +3,13 @@ package com.alipay.sofa.entrance.web;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.sofa.constant.IsoFields;
 import com.alipay.sofa.entrance.web.service.MessageService;
+import com.alipay.sofa.model.StoriMessage;
+import com.alipay.sofa.mq.producer.service.MqProducerService;
 import com.alipay.sofa.util.MessageTester;
 import com.solab.iso8583.IsoMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +30,9 @@ public class MessageController {
     // TODO
     // Processing Component
 
+    @Autowired
+    private MqProducerService mqProducerService;
+
     @PostMapping("/message/json")
     public JSONObject handleJson(@RequestBody JSONObject request) {
         logger.info("Received json message {}", request);
@@ -38,6 +44,13 @@ public class MessageController {
         IsoMessage isoMessage = messageService.of(request);
         // TODO
         // require put to mq queue for processing.
+        StoriMessage storiMessage = new StoriMessage();
+        // TODO 填充消息，originMessage为isoMessage编码后的字符串 @尚武
+
+        boolean sendResult = mqProducerService.sendMessage(JSONObject.toJSONString(storiMessage));
+        if (!sendResult) {
+            // TODO 发送消息异常处理，直接返回
+        }
 
         // receive result from the output
 
