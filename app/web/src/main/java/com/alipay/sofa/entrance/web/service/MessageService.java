@@ -1,6 +1,9 @@
 package com.alipay.sofa.entrance.web.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.alipay.sofa.constant.IsoFields;
+import com.solab.iso8583.IsoMessage;
+import com.solab.iso8583.MessageFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,24 +12,60 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import javax.annotation.Resource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.IOException;
 import java.net.URL;
 
 @Service
 public class MessageService {
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private Logger logger = LoggerFactory.getLogger(MessageService.class);
+
+    @Resource
+    private MessageFactory<IsoMessage> defaultMessageFactory;
+
+    /**
+     * Create an {@link IsoMessage} from json.
+     *
+     * @param json
+     * @return
+     */
+    public IsoMessage of(JSONObject json) {
+        Integer type = parseType(json.getString("0"));
+        logger.info(String.format("Type %04x", type));
+        IsoMessage isoMessage = defaultMessageFactory.newMessage(type);
+        for (int i = 2; i < 129; i++) {
+            String key = String.valueOf(i);
+            String value = json.getString(key);
+            if (StringUtils.isNotBlank(value)) {
+                IsoFields field = IsoFields.of(i);
+                logger.info(String.format("Field %-4s %45s %-14s", field, field.getDesc(), value));
+                isoMessage.setValue(i, value, field.getFormat(), field.getLength());
+            }
+        }
+        return isoMessage;
+    }
+
+    private int parseType(String type) {
+        if (type.length() % 2 == 1) {
+            type = "0" + type;
+        }
+        if (type.length() != 4) {
+            return -1;
+        }
+        return ((type.charAt(0) - 48) << 12) | ((type.charAt(1) - 48) << 8)
+                | ((type.charAt(2) - 48) << 4) | (type.charAt(3) - 48);
+    }
 
 
-    public JSONObject loadTemplatesFromResource() throws IOException {
+    public JSONObject loadTemplatesFromResource() {
         URL resource = this.getClass().getClassLoader().getResource("j8583-templates.xml");
         return parse(resource.getPath());
     }
 
 
-    public JSONObject parse(String uri) {
+    protected JSONObject parse(String uri) {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         try {
             DocumentBuilder builder = factory.newDocumentBuilder();

@@ -11,7 +11,7 @@
     <!-- CUPS Request Message-->
     <template type="0100">
         <!--PAN data-->
-        <field num="2" type="LLVAR">4321123443211234</field>
+        <field num="2" type="LLVAR">4761739001010119</field>
         <!--Process Code 2:Transaction Code 2:Account, from 2:Account, to-->
         <field num="3" type="NUMERIC" length="6">000000</field>
         <!--Amount, transaction-->

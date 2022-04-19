@@ -3,7 +3,7 @@ package com.alipay.sofa.entrance.web;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.sofa.constant.IsoFields;
 import com.alipay.sofa.entrance.web.service.MessageService;
-import org.apache.commons.io.FileUtils;
+import com.solab.iso8583.IsoMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,11 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
 
 @RestController
 public class MessageController {
@@ -30,10 +26,25 @@ public class MessageController {
 
     @PostMapping("/message/json")
     public JSONObject handleJson(@RequestBody JSONObject request) {
+        logger.info("Received json message {}", request);
+        // for debug
         request.put("0", "0110");
         request.put("38", "123323");
         request.put("39", "00");
-        return request;
+        // generate iso message
+        IsoMessage isoMessage = messageService.of(request);
+        // TODO
+        // require put to mq queue for processing.
+
+        // receive result from the output
+
+        // return resp to front
+        JSONObject resp = new JSONObject();
+        resp.put("request", request);
+        resp.put("requestHex", isoMessage.toCupsAsciiHexMessageWithOutHeader());
+        resp.put("response", "key:value");
+        resp.put("responseHex", "origin str from output");
+        return resp;
     }
 
     @PostMapping("/message/raw")
