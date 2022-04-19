@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE j8583-config PUBLIC "-//J8583//DTD CONFIG 1.0//EN"
+        "http://j8583.sourceforge.net/j8583.dtd">
+<j8583-config>
+    <!-- This is a test config file -->
+
+    <!--header-->
+    <!--<header type="0100"></header>-->
+    <!--<header type="0110"></header>-->
+
+    <!-- CUPS Request Message-->
+    <template type="0100">
+        <!--PAN data-->
+        <field num="2" type="LLVAR">4761739001010119</field>
+        <!--Process Code 2:Transaction Code 2:Account, from 2:Account, to-->
+        <field num="3" type="NUMERIC" length="6">000000</field>
+        <!--Amount, transaction-->
+        <field num="4" type="NUMERIC" length="12">000000012300</field>
+        <!--Date and time, transmission-->
+        <field num="7" type="DATE10">0304054133</field>
+        <!--System trace audit number-->
+        <field num="11" type="NUMERIC" length="6">001205</field>
+        <!--Time, local transaction-->
+        <field num="12" type="DATE6">001205</field>
+        <!--Date, local transaction-->
+        <field num="13" type="DATE4">0205</field>
+        <!--Date, expiry-->
+        <field num="14" type="DATE_EXP">2705</field>
+        <!--Date, settlement-->
+        <field num="15" type="DATE4">0205</field>
+        <!--Card Acceptor Business Code (CABC)-->
+        <field num="18" type="NUMERIC" length="4">5399</field>
+        <!--Country Code, Acquirer-->
+        <field num="19" type="NUMERIC" length="3">086</field>
+        <!--POS entry mode-->
+        <!--<field num="22" type="NUMERIC" length="3">223</field>-->
+        <!--POS condition code-->
+        <field num="25" type="NUMERIC" length="2">08</field>
+        <!--Institution ID, Acquirer-->
+        <field num="32" type="LLVAR">10001</field>
+        <!--Institution ID, Forwarder-->
+        <field num="33" type="LLVAR">10002</field>
+        <!--Retrieval Reference Number-->
+        <field num="37" type="ALPHA" length="12">206305000014</field>
+        <!--Card Acceptor Terminal Identification Terminal ID-->
+        <field num="41" type="ALPHA" length="8">29110001</field>
+        <!--CAIC Merchant ID-->
+        <field num="42" type="ALPHA" length="15">100101001010010</field>
+        <!--CAIC Merchant ID-->
+        <!--<field num="43" type="ALPHA" length="40">shanghai</field>-->
+        <!--Currency code-->
+        <field num="49" type="ALPHA" length="3">840</field>
+        <field num="57" type="ALPHA" length="100">
+            <field num="0" type="NUMERIC" length="3">100</field>
+            <field num="1" type="ALPHA" length="2">AB</field>
+            <field num="2" type="ALPHA" length="20">123</field>
+            <field num="3" type="ALPHA" length="20">456</field>
+        </field>
+        <field num="100" type="LLVAR" length="11">62280000</field>
+    </template>
+
+</j8583-config>

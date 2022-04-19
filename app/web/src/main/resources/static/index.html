@@ -1,9 +1,277 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 
 <head>
-<meta charset="utf-8">
-<title></title>
+    <meta charset="UTF-8"/>
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+    <meta http-equiv="Pragma" content="no-cache"/>
+    <meta http-equiv="Expires" content="0"/>
+    <link rel="shortcut icon" href="/favicon.ico"/>
 
+    <style>
+        @import url('/lib/element-ui/theme-chalk/index.css');
 
+        body {
+            width: 90%;
+            margin: 10px auto;
+        }
 
-<h1><center>The static page in SOFA Boot based on Spring Boot.</center></h1>
+        h1 {
+            color: #333;
+        }
+
+        p {
+            color: #999;
+            font-size: 12px;
+        }
+
+        [contenteditable="true"]:empty:before {
+            content: attr(placeholder);
+            display: block;
+            color: #ccc;
+        }
+
+        table tr:nth-child(even) {
+            background: #F5FAFA;
+        }
+
+        .float-right {
+            float: right;
+        }
+
+        .fixed-bottom {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+        }
+
+        .link {
+            margin-right: 30px;
+        }
+    </style>
+</head>
+
+<body>
+<div id="app" v-cloak>
+    <div style="min-height: 72vh;">
+        <h1>R&D Message Test</h1>
+        <p>ISO8583 CUPS</p>
+        <el-select v-model="select" @change="v=>request=v" placeholder="Select a template">
+            <el-option
+                    v-for="item in options"
+                    :key="item.label"
+                    :label="item.label"
+                    :value="item.value">
+            </el-option>
+        </el-select>
+        <el-row style="margin-top:10px;margin-bottom: 50px">
+            <el-col :span="18">
+                <el-table
+                        ref="multipleTable"
+                        :data="fields.filter(data =>  !hide || request[data.no] || response[data.no])"
+                        tooltip-effect="dark"
+                        border
+                        style="width: 100%"
+                        @selection-change="handleSelectionChange">
+                    <el-table-column
+                            type="selection"
+                            width="55">
+                    </el-table-column>
+                    <el-table-column
+                            label="Field"
+                            width="100">
+                        <template slot-scope="scope"><h2>{{ scope.row.no }}</h2></template>
+                    </el-table-column>
+                    <el-table-column
+                            prop="desc"
+                            label="Desc"
+                            show-overflow-tooltip
+                            width="360">
+                        <template slot-scope="scope"><h2>{{ scope.row.desc }}</h2></template>
+                    </el-table-column>
+                    <el-table-column
+                            label="Format"
+                            show-overflow-tooltip
+                            width="200">
+                        <template slot-scope="scope"><h2>
+                            {{ scope.row.type + (scope.row.fixed ? "" : "..") + scope.row.length + (scope.row.format ? "(" + scope.row.format + ")" : "")
+                            }}</h2></template>
+                    </el-table-column>
+                    <el-table-column
+                            label="Request Value">
+                        <template slot-scope="scope">
+                            <el-input width="350" size="large" v-model="request[scope.row.no]"></el-input>
+                        </template>
+                    </el-table-column>
+                    <el-table-column
+                            label="Response Value">
+                        <template slot-scope="scope">
+                            <el-input width="350" size="large" v-model="response[scope.row.no]"></el-input>
+                        </template>
+                    </el-table-column>
+                </el-table>
+                <!--                <div style="margin-top: 20px">-->
+                <!--                    <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button>-->
+                <!--                    <el-button @click="toggleSelection()">取消选择</el-button>-->
+                <!--                </div>-->
+            </el-col>
+            <el-col :span="5" :offset="1">
+                <el-row style="margin-bottom: 50px">
+                    <el-switch
+                            v-model="hide"
+                            active-text="Hide Empty Field">
+                    </el-switch>
+                </el-row>
+                <el-row style="margin-bottom: 50px">
+                    <el-button type="primary" v-loading="loading" @click="submitForm">Send</el-button>
+                </el-row>
+            </el-col>
+        </el-row>
+    </div>
+</div>
+</body>
+<script src="/lib/vue/vue.js"></script>
+<script src="/lib/element-ui/index.js"></script>
+<script src="/lib/axios.min.js"></script>
+
+<script>
+    function groupBy(list, fn) {
+        const groups = {}
+        list.forEach(function (o) {
+            const group = fn(o)
+            groups[group] = groups[group] || []
+            groups[group].push(o)
+        })
+        return groups
+    }
+
+    new Vue({
+        el: '#app',
+        data() {
+            const validateName = async (rule, value, callback) => {
+                let _this = this
+                const res = await axios.get('/record/has?t=' + value);
+                if (res.data.data !== 0) {
+                    callback(new Error(''));
+                } else {
+                    callback();
+                }
+            };
+            return {
+                hide: false,
+                select: null,
+                loading: false,
+                response: {},
+                request: {},
+                fields: [],
+                options: [],
+                multipleSelection: [],
+                rules: {
+                    name: [
+                        {required: true, message: '', trigger: 'blur'},
+                        {validator: validateName, trigger: 'blur'}
+                    ],
+                    lane: [
+                        {required: true, message: '', trigger: 'blur'}
+                    ],
+                }
+            }
+        },
+        methods: {
+            toggleSelection(rows) {
+                if (rows) {
+                    rows.forEach(row => {
+                        this.$refs.multipleTable.toggleRowSelection(row);
+                    });
+                } else {
+                    this.$refs.multipleTable.clearSelection();
+                }
+            },
+            handleSelectionChange(val) {
+                this.multipleSelection = val;
+            },
+            apply(row, mode) {
+                var _this = this
+                axios({
+                    headers: {
+                        'Content-Type': 'application/json;charset=UTF-8'
+                    },
+                    method: 'post',
+                    data: {
+                        row: row,
+                        mode: mode
+                    },
+                    url: `/record/apply`
+                })
+                    .then(function (response) {
+                        _this.$message({
+                            type: 'success',
+                            message: '提交成功,等待审核.'
+                        })
+                    })
+                    .catch(function (error) {
+                        console.log(error)
+                        _this.$message({
+                            type: 'error',
+                            message: error.message
+                        })
+                    })
+            },
+            submitForm() {
+                const _this = this;
+                _this.loading = true
+                axios.post("/message/json", this.request)
+                    .then(function (response) {
+                        _this.loading = false
+                        // response not implement yet
+                        _this.response = response.data.request
+                    })
+                    .catch(function (error) {
+                        _this.loading = false
+                        console.log(error)
+                        _this.$message({
+                            type: 'error',
+                            message: error.message
+                        })
+                    })
+            },
+            resetForm(formName) {
+                this.$refs[formName].resetFields();
+            }
+            ,
+            getData: function () {
+                let _this = this
+                axios.get("/message/fields").then(response => {
+                    _this.fields = []
+                    for (const k in response.data) {
+                        _this.fields.push(response.data[k])
+                    }
+                })
+                axios.get("/message/templates").then(response => {
+                    _this.options = []
+                    for (const k in response.data) {
+                        const v = {}
+                        for (const j in response.data[k]) {
+                            v[j] = response.data[k][j].value
+                        }
+                        _this.options.push(
+                            {
+                                label: k,
+                                value: v
+                            }
+                        )
+                    }
+                })
+            }
+            ,
+        },
+        mounted() {
+            this.getData()
+        }
+    })
+</script>
+
+</html>
