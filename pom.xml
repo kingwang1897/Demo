@@ -100,5 +100,6 @@
     <module>app/endpoint</module>
     <module>app/web</module>
     <module>j8583</module>
+    <module>processor</module>
 </modules>
 </project>
