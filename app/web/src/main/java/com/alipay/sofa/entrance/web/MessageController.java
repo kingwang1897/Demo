@@ -21,7 +21,7 @@ import java.io.IOException;
 @RestController
 public class MessageController {
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
+    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Resource
     private MessageService messageService;
@@ -42,10 +42,13 @@ public class MessageController {
         request.put("39", "00");
         // generate iso message
         IsoMessage isoMessage = messageService.of(request);
+        String hex = isoMessage.toCupsAsciiHexMessageWithOutHeader();
         // TODO
         // require put to mq queue for processing.
         StoriMessage storiMessage = new StoriMessage();
         // TODO 填充消息，originMessage为isoMessage编码后的字符串 @尚武
+
+        storiMessage.setOriginMessage(hex);
 
         boolean sendResult = mqProducerService.sendMessage(JSONObject.toJSONString(storiMessage));
         if (!sendResult) {
@@ -55,9 +58,10 @@ public class MessageController {
         // receive result from the output
 
         // return resp to front
-        String hex = isoMessage.toCupsAsciiHexMessageWithOutHeader();
+
         String info = defaultMessageTester.parse(hex);
         JSONObject resp = new JSONObject();
+        resp.put("sendResult", sendResult);
         resp.put("request", request);
         resp.put("requestHex", hex);
         resp.put("requestInfo", info);

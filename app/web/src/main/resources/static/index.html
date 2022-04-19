@@ -69,6 +69,7 @@
     <div style="min-height: 72vh;">
         <h1>R&D Message Test</h1>
         <p>ISO8583 CUPS</p>
+        Templates:
         <el-select v-model="select" @change="v=>request=v" placeholder="Select a template">
             <el-option
                     v-for="item in options"
@@ -77,6 +78,16 @@
                     :value="item.value">
             </el-option>
         </el-select>
+        Transactions:
+        <el-select v-model="selectMessage" @change="v=>request=v.message" placeholder="Select a transaction">
+            <el-option
+                    v-for="item in requests"
+                    :key="item.messageId"
+                    :label="item.messageId"
+                    :value="item">
+            </el-option>
+        </el-select>
+
         <el-row style="margin-top:10px;margin-bottom: 20px">
             <el-col :span="17">
                 <el-table
@@ -131,7 +142,14 @@
                 <el-row style="margin-bottom: 20px">
                     <el-switch
                             v-model="hide"
-                            active-text="Hide Empty Field">
+                            inactive-text="ShowEmpty"
+                            active-text="HideEmpty">
+                    </el-switch>
+                    &nbsp;&nbsp;
+                    <el-switch
+                            v-model="post"
+                            inactive-text="Socket"
+                            active-text="Post">
                     </el-switch>
                 </el-row>
                 <el-row style="margin-bottom: 20px">
@@ -181,39 +199,52 @@
     }
 
     new Vue({
-        el: '#app',
-        data() {
-            const validateName = async (rule, value, callback) => {
-                let _this = this
-                const res = await axios.get('/record/has?t=' + value);
-                if (res.data.data !== 0) {
-                    callback(new Error(''));
-                } else {
-                    callback();
-                }
-            };
-            return {
-                hide: false,
-                select: null,
-                loading: false,
-                response: {},
-                request: {},
-                fields: [],
-                info: [],
-                options: [],
-                multipleSelection: [],
-                rules: {
-                    name: [
-                        {required: true, message: '', trigger: 'blur'},
-                        {validator: validateName, trigger: 'blur'}
-                    ],
-                    lane: [
-                        {required: true, message: '', trigger: 'blur'}
-                    ],
-                }
-            }
-        },
         methods: {
+            generateUuid() {
+                const s = [];
+                const hexDigits = "0123456789abcdef";
+                for (let i = 0; i < 36; i++) {
+                    s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+                }
+                s[14] = "4";   // bits 12-15 of the time_hi_and_version field to 0010
+                s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);   // bits 6-7 of the clock_seq_hi_and_reserved to 01
+                s[8] = s[13] = s[18] = s[23] = "-";
+                const uuid = s.join("");
+                return uuid;
+            },
+            processEvent(evt) {
+                console.log("received:", evt)
+                const message = JSON.parse(evt)
+                if (message.code == 10002) {
+                    this.info.push({
+                        type: 'recv',
+                        time: this.formatDate(new Date()),
+                        message: message
+                    })
+                }
+            },
+            createWebSocket: function (socketId) {
+                const that = this
+                this.ws = new WebSocket(`ws://${location.host}/request/${socketId}`)
+                this.ws.onopen = function () {
+                    console.log('Opened ' + that.socketId)
+                    that.ws.send(
+                        JSON.stringify({
+                            code: 10000,
+                            message: 'start'
+                        })
+                    )
+                }
+                this.ws.onmessage = function (evt) {
+                    that.processEvent(evt)
+                }
+                this.ws.onclose = function () {
+                    console.log('Closed')
+                }
+                this.ws.onerror = function (err) {
+                    console.log(err)
+                }
+            },
             toggleSelection(rows) {
                 if (rows) {
                     rows.forEach(row => {
@@ -264,33 +295,73 @@
                 return true
             },
             submitForm() {
-                const _this = this;
+                const that = this;
                 if (!this.validateRequest()) {
                     return
                 }
-                _this.loading = true
-                _this.info.push({
+                // that.loading = true
+                that.chatScrollTop()
+                if (this.post) {
+                    that.postRequest()
+                } else {
+                    that.sendRequest()
+                }
+            },
+            countDown(messageId) {
+                const that = this
+                setTimeout(() => {
+                    if (that.requests[messageId].status === 'Pending') {
+                        //TODO 冲正
+                        that.requests[messageId].status = "TimedOut"
+                        console.log(`${messageId} Timed out , reversing.`)
+                        that.$message({
+                            type: 'error',
+                            message: `${messageId} Timed out , reversing.`
+                        })
+                    }
+                }, 15 * 1000)
+            },
+            sendRequest() {
+                const that = this
+                const messageId = this.generateUuid()
+                const message = {
+                    code: 10001,
                     type: 'send',
+                    status: "Pending",
                     time: this.formatDate(new Date()),
+                    messageId: messageId,
+                    message: that.request
+                }
+                const str = JSON.stringify(message)
+                that.ws.send(str)
+                that.requests[messageId] = message
+                that.info.push(JSON.parse(str))
+                that.countDown(messageId)
+            },
+            postRequest() {
+                const that = this
+                that.loading = true
+                that.info.push({
+                    type: 'send',
+                    time: that.formatDate(new Date()),
                     message: JSON.parse(JSON.stringify(this.request))
                 })
-                _this.chatScrollTop()
                 axios.post("/message/json", this.request)
                     .then(function (response) {
-                        _this.loading = false
+                        that.loading = false
                         // response not implement yet
-                        _this.info.push({
+                        that.info.push({
                             type: 'recv',
-                            time: _this.formatDate(new Date()),
+                            time: that.formatDate(new Date()),
                             message: response.data
                         })
-                        _this.chatScrollTop()
-                        _this.response = response.data.request
+                        that.chatScrollTop()
+                        that.response = response.data.request
                     })
                     .catch(function (error) {
-                        _this.loading = false
+                        that.loading = false
                         console.log(error)
-                        _this.$message({
+                        that.$message({
                             type: 'error',
                             message: error.message
                         })
@@ -301,21 +372,21 @@
             }
             ,
             getData: function () {
-                let _this = this
+                let that = this
                 axios.get("/message/fields").then(response => {
-                    _this.fields = []
+                    that.fields = []
                     for (const k in response.data) {
-                        _this.fields.push(response.data[k])
+                        that.fields.push(response.data[k])
                     }
                 })
                 axios.get("/message/templates").then(response => {
-                    _this.options = []
+                    that.options = []
                     for (const k in response.data) {
                         const v = {}
                         for (const j in response.data[k]) {
                             v[j] = response.data[k][j].value
                         }
-                        _this.options.push(
+                        that.options.push(
                             {
                                 label: k,
                                 value: v
@@ -326,8 +397,46 @@
             }
             ,
         },
+        el: '#app',
+        data() {
+            const validateName = async (rule, value, callback) => {
+                let that = this
+                const res = await axios.get('/record/has?t=' + value);
+                if (res.data.data !== 0) {
+                    callback(new Error(''));
+                } else {
+                    callback();
+                }
+            };
+            return {
+                socketId: null,
+                requests: {},
+                hide: false,
+                post: false,
+                select: null,
+                selectMessage: null,
+                loading: false,
+                response: {},
+                request: {},
+                fields: [],
+                info: [],
+                options: [],
+                multipleSelection: [],
+                rules: {
+                    name: [
+                        {required: true, message: '', trigger: 'blur'},
+                        {validator: validateName, trigger: 'blur'}
+                    ],
+                    lane: [
+                        {required: true, message: '', trigger: 'blur'}
+                    ],
+                }
+            }
+        },
         mounted() {
             this.getData()
+            this.socketId = this.generateUuid();
+            this.createWebSocket(this.socketId)
         }
     })
 </script>
