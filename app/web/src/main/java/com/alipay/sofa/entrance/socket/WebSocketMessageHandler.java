@@ -44,6 +44,8 @@ public class WebSocketMessageHandler {
         if (!sendResult) {
             // TODO 发送消息异常处理，直接返回
         }
+        // TODO for debug, need remove after processing service completed.
+        handleResponse(socketId, request);
     }
 
     public void handleResponse(String socketId, JSONObject request) {

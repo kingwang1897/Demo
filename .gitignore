@@ -9,3 +9,5 @@
 
 *.log
 **/logs
+**/target/
+/processor/processor.iml
