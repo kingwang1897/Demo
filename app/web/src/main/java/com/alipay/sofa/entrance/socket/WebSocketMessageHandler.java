@@ -45,11 +45,32 @@ public class WebSocketMessageHandler {
             // TODO 发送消息异常处理，直接返回
         }
         // TODO for debug, need remove after processing service completed.
-        handleResponse(socketId, request);
+        String info = defaultMessageTester.parse(hex);
+        JSONObject resp = new JSONObject();
+        JSONObject respMessage = new JSONObject();
+        resp.put("code", 10002);
+        respMessage.put("request", request);
+        respMessage.put("requestHex", hex);
+        respMessage.put("requestInfo", info);
+        respMessage.put("response", "key:value");
+        respMessage.put("responseHex", "origin str from output");
+        respMessage.put("responseInfo", "response info");
+        resp.put("message", respMessage);
+        WebSocketServer.sendMessage(socketId, JSON.toJSONString(resp));
+        // Debug End
     }
 
-    public void handleResponse(String socketId, JSONObject request) {
-        WebSocketServer.sendMessage(socketId, JSON.toJSONString(request));
+    public void handleResponse(StoriMessage storiMessage) {
+        // TODO return to front
+        // JSONObject respMessage = new JSONObject();
+        // respMessage.put("sendResult", sendResult);
+        // respMessage.put("request", request);
+        // respMessage.put("requestHex", hex);
+        // respMessage.put("requestInfo", info);
+        // respMessage.put("response", "key:value");
+        // respMessage.put("responseHex", "origin str from output");
+        // respMessage.put("responseInfo", "response info");
+        // resp.put("message", respMessage);
     }
 
 }
