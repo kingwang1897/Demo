@@ -128,7 +128,6 @@ public class MessageParseServiceImpl implements MessageParseService {
             messageResult.setMessageFileds(CommonUtil.convertMap(isoMessage));
             return messageResult;
         } catch (Exception e) {
-            System.out.println(Throwables.getStackTraceAsString(e));
             logger.error("parseMsgByConfig error, cause by: {}.", Throwables.getStackTraceAsString(e));
             return null;
         }

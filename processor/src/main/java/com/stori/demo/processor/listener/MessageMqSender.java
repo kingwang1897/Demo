@@ -30,8 +30,8 @@ public class MessageMqSender {
         storiMessage.setSocketId(messageLifecycle.getSocketId());
         storiMessage.setOriginMessage(messageLifecycle.getMessageResult().getMessage());
         storiMessage.setMessageFileds(messageLifecycle.getMessageResult().getMessageFileds());
-//        boolean result = mqProducerService.sendMessage(JSON.toJSONString(storiMessage));
-        if (true) {
+        boolean result = mqProducerService.sendMessage(JSON.toJSONString(storiMessage));
+        if (!result) {
             logger.error("messageSender error, messageId is :{}.", messageLifecycle.getMessageId());
             return;
         }
@@ -39,6 +39,5 @@ public class MessageMqSender {
         // step 2: update status
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
         messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
-        System.out.println(JSON.toJSONString(storiMessage));
     }
 }
