@@ -57,6 +57,7 @@
             <field num="3" type="ALPHA" length="20">456</field>
         </field>
         <field num="100" type="LLVAR" length="11">62280000</field>
+        <field num="128" type="ALPHA" length="8">ABCDEFGH</field>
     </template>
 
 </j8583-config>

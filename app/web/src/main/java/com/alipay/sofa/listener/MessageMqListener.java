@@ -32,11 +32,13 @@ public class MessageMqListener {
         HelpResult helpResult = messageHandleService.messageHandle(messageResult);
 
         // step 2: response message
-        String responseMessage = messageGenerateService.generateMsgByConfig(messageResult, helpResult);
-        // 2e123036353834383031303030303030303030303130303030303030000000003030303030303030003030303030303831308220000002000800040000001000000130343133313430303030343830373532303031363030303030303030303030303030313031303839323031303030304142434445464748
-        System.out.println(responseMessage);
+        HelpResult<MessageResult> response = messageGenerateService.generateMsgByXml(messageResult, helpResult);
+        if (!response.isSuccess()) {
+            return;
+        }
 
         // step 3: verify response
-        messageVerifyManager.parse(responseMessage);
+        System.out.println(response.getData().getMessage());
+        messageVerifyManager.parse(response.getData().getMessage());
     }
 }

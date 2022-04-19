@@ -8,3 +8,4 @@
 /app/endpoint/web-app-endpoint.iml
 
 *.log
+**/logs
