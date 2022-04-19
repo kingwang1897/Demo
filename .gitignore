@@ -6,3 +6,5 @@
 /app/.idea/workspace.xml
 /app/web/0x110.parse.html
 /app/endpoint/web-app-endpoint.iml
+
+*.log
