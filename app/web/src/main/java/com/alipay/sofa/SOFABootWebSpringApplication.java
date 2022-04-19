@@ -1,6 +1,7 @@
 package com.alipay.sofa;
 
 import com.alipay.sofa.endpoint.facade.SampleRestFacade;
+import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -11,7 +12,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.concurrent.TimeUnit;
 
-@SpringBootApplication(scanBasePackages = {"com.alipay.sofa"})
+@SpringBootApplication(scanBasePackages = {"com.alipay.sofa"}, exclude = {RocketMQAutoConfiguration.class})
 @ImportResource({"classpath*:META-INF/web-app/*.xml"})
 @EnableScheduling
 public class SOFABootWebSpringApplication {
