@@ -1,5 +1,10 @@
 package com.stori.demo.processor.util;
 
+import com.solab.iso8583.IsoMessage;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class CommonUtil {
 
     /**
@@ -84,5 +89,22 @@ public class CommonUtil {
 
         Integer bitInteger = Integer.parseInt(bitMap.substring(0, 1), 16);
         return bitInteger < 7 ? false : true;
+    }
+
+    /**
+     * convertMap
+     *
+     * @param isoMessage
+     * @return
+     */
+    public static Map<Integer, String> convertMap(IsoMessage isoMessage) {
+        Map<Integer, String> messageMap = new HashMap<>();
+        for (int i = 2; i <= 128; i++) {
+            if (isoMessage.hasField(i)) {
+                messageMap.put(i, isoMessage.getField(i).toString());
+            }
+        }
+
+        return messageMap;
     }
 }

@@ -1,5 +1,7 @@
 package com.stori.demo.processor.model;
 
+import java.util.Map;
+
 /**
  * 写入消息队列的，封装后的消息。后续可以考虑增加其他字段或者完全将originMessage解析
  */
@@ -16,9 +18,19 @@ public class StoriMessage {
     private String socketId;
 
     /**
+     * messageId : match the in and out message
+     */
+    private String messageId;
+
+    /**
      * 原始请求报文
      */
     private String originMessage;
+
+    /**
+     * 报文域信息
+     */
+    private Map<Integer, String> messageFileds;
 
     public String getMessageChannel() {
         return messageChannel;
@@ -42,5 +54,21 @@ public class StoriMessage {
 
     public void setOriginMessage(String originMessage) {
         this.originMessage = originMessage;
+    }
+
+    public Map<Integer, String> getMessageFileds() {
+        return messageFileds;
+    }
+
+    public void setMessageFileds(Map<Integer, String> messageFileds) {
+        this.messageFileds = messageFileds;
+    }
+
+    public String getMessageId() {
+        return messageId;
+    }
+
+    public void setMessageId(String messageId) {
+        this.messageId = messageId;
     }
 }

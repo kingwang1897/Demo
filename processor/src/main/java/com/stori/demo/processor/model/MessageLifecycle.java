@@ -5,6 +5,8 @@ import com.stori.demo.processor.constant.MessageStatus;
 
 public class MessageLifecycle {
 
+    private String messageChannel;
+
     private String messageId;
 
     private String socketId;
@@ -17,7 +19,8 @@ public class MessageLifecycle {
 
     private Long messageProcessorTime;
 
-    public MessageLifecycle(String socketId, String messageId, String message) {
+    public MessageLifecycle(String messageChannel, String socketId, String messageId, String message) {
+        this.messageChannel = messageChannel;
         this.socketId = socketId;
         this.messageId = messageId;
         MessageResult messageResult = new MessageResult();
@@ -71,5 +74,13 @@ public class MessageLifecycle {
 
     public void setHelpResult(HelpResult helpResult) {
         this.helpResult = helpResult;
+    }
+
+    public String getMessageChannel() {
+        return messageChannel;
+    }
+
+    public void setMessageChannel(String messageChannel) {
+        this.messageChannel = messageChannel;
     }
 }

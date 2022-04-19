@@ -12,11 +12,15 @@ import com.stori.demo.processor.service.MessageParseService;
 import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service("messageParseService")
 public class MessageParseServiceImpl implements MessageParseService {
     protected final Logger logger = LoggerFactory.getLogger(MessageParseServiceImpl.class);
+
+    @Value("${message.parse.header}")
+    private boolean parseheader;
 
     /**
      * parse pkt(contain header and msg)
@@ -27,18 +31,19 @@ public class MessageParseServiceImpl implements MessageParseService {
     public MessageLifecycle parsePkt(MessageLifecycle messageLifecycle) {
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
         String pkt = messageLifecycle.getMessageResult().getPkt();
-        if (pkt.isEmpty() || pkt.length() < Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH) {
+        int headerLength = parseheader ? Constant.MESSAGE_HEADER_LENGTH_HEX : 0;
+        if (pkt.isEmpty() || pkt.length() < headerLength + Constant.MESSAGE_TYPE_ID_LENGTH) {
             logger.warn("msg is invalid");
             // 转异常处理 todo
             messageLifecycle.setStatus(MessageStatus.FAILURE);
         }
 
-        Integer bitMapLength = CommonUtil.judgeBitMap(pkt.substring(Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH)) ? Constant.MESSAGE_BIT_MAP_LENGTH_EXTEND : Constant.MESSAGE_BIT_MAP_LENGTH;
+        Integer bitMapLength = CommonUtil.judgeBitMap(pkt.substring(headerLength + Constant.MESSAGE_TYPE_ID_LENGTH)) ? Constant.MESSAGE_BIT_MAP_LENGTH_EXTEND : Constant.MESSAGE_BIT_MAP_LENGTH;
         MessageResult messageResult = new MessageResult();
-        messageResult.setHeader(pkt.substring(0, Constant.MESSAGE_HEADER_LENGTH_HEX));
-        messageResult.setType(pkt.substring(Constant.MESSAGE_HEADER_LENGTH_HEX, Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH));
-        messageResult.setBitMap(pkt.substring(Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH, Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH + bitMapLength));
-        messageResult.setMessageData(pkt.substring(Constant.MESSAGE_HEADER_LENGTH_HEX + Constant.MESSAGE_TYPE_ID_LENGTH + bitMapLength));
+        messageResult.setHeader(parseheader ? pkt.substring(0, Constant.MESSAGE_HEADER_LENGTH_HEX) : "");
+        messageResult.setType(pkt.substring(headerLength, headerLength + Constant.MESSAGE_TYPE_ID_LENGTH));
+        messageResult.setBitMap(pkt.substring(headerLength + Constant.MESSAGE_TYPE_ID_LENGTH, headerLength + Constant.MESSAGE_TYPE_ID_LENGTH + bitMapLength));
+        messageResult.setMessageData(pkt.substring(headerLength + Constant.MESSAGE_TYPE_ID_LENGTH + bitMapLength));
 
         StringBuffer stringBuffer = new StringBuffer();
         stringBuffer.append(messageResult.getHeader())
@@ -46,8 +51,8 @@ public class MessageParseServiceImpl implements MessageParseService {
                 .append(messageResult.getBitMap())
                 .append(CommonUtil.convertHexToString(messageResult.getMessageData()));
 
-        MessageResult parseResult = parseMsgByConfig(stringBuffer.toString(), Constant.MESSAGE_HEADER_LENGTH_HEX);
-        messageResult.setFields(parseResult.getFields());
+        MessageResult parseResult = parseMsgByConfig(stringBuffer.toString(), headerLength);
+        messageResult.setMessageFileds(parseResult.getMessageFileds());
         messageLifecycle.setMessageResult(messageResult);
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
         return messageLifecycle;
@@ -118,15 +123,7 @@ public class MessageParseServiceImpl implements MessageParseService {
             //解析报文
             IsoMessage isoMessage = messageFactory.parseMessage(msg.getBytes(), headerLength);
             MessageResult messageResult = new MessageResult();
-            String[] fields = new String[129];
-            messageResult.setFields(fields);
-
-            for (int i = 2; i <= 128; i++) {
-                if (isoMessage.hasField(i)) {
-                    fields[i] = isoMessage.getField(i).toString();
-                }
-            }
-
+            messageResult.setMessageFileds(CommonUtil.convertMap(isoMessage));
             return messageResult;
         } catch (Exception e) {
             System.out.println(Throwables.getStackTraceAsString(e));
