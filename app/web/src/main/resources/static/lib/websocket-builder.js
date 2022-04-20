@@ -15,10 +15,10 @@ window.WebSockets = (function () {
                 console.log(e.data)
             }
         this.onclose =
-            builder.getOnclose() ||
-            function () {
+            () => {
                 console.log('WebSocket Closed.')
                 that.reConnect()
+                builder.getOnclose()()
             }
         this.onerror =
             builder.getOnerror() ||

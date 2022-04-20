@@ -57,26 +57,30 @@
             white-space: pre-wrap;
             word-wrap: break-word;
         }
+
+        .socket-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            border-radius: 90px;
+            /*background: #13ce66;*/
+            /*background: #dd6161;*/
+        }
     </style>
 </head>
 
 <body>
 <div id="app" v-cloak>
+    <div class="socket-status"
+         :style="{'background': connected ? '#13ce66' : '#dd6161'}"
+    ></div>
     <div style="min-height: 72vh;">
         <el-row>
             <el-col :span="5"><h1>R&D Message Test</h1></el-col>
             <el-col :span="3"><p style="line-height: 40px">ISO8583 CUPS</p></el-col>
         </el-row>
-        <!--        TransactionsMap:-->
-        <!--        <el-select v-model="selectMessage" @change="messageId=>request=transactionsMap[messageId].message"-->
-        <!--                   placeholder="Select a transaction">-->
-        <!--            <el-option-->
-        <!--                    v-for="item in transactionsMap"-->
-        <!--                    :key="item.messageId"-->
-        <!--                    :label="item.messageId + ':'+item.status"-->
-        <!--                    :value="item.messageId">-->
-        <!--            </el-option>-->
-        <!--        </el-select>-->
 
         <el-row style="margin-top:10px;margin-bottom: 20px">
             <el-col :span="17">
@@ -284,8 +288,16 @@
                             type: 'success',
                             message: "WebSocket connected with socketId " + that.socketId
                         })
-                    }).build()
+                        that.connected = true
+                    })
+                    .onClose(
+                        () => {
+                            that.connected = false
+                        }
+                    )
+                    .build()
                 window.socket.connect()
+                this.socket = window.socket
             },
             toggleSelection(rows) {
                 if (rows) {
@@ -316,8 +328,8 @@
             handleCurrentChange(row) {
                 console.log('handleCurrentChange', row)
                 console.log('val.message', row.message)
-                this.request = row.message
-                this.response = row.response
+                this.request = JSON.parse(JSON.stringify(row.message))
+                this.response = JSON.parse(JSON.stringify(row.response))
             },
             formatDate: function (date) {
                 const seperator1 = "-";
@@ -491,6 +503,8 @@
             };
             return {
                 socketId: null,
+                socket: null,
+                connected: false,
                 transactionsMap: {},
                 transactions: [],
                 hide: false,
