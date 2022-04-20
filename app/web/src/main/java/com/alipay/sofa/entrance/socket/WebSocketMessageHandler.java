@@ -122,8 +122,8 @@ public class WebSocketMessageHandler {
             JSONObject respMessage = new JSONObject();
             // put request
             respMessage.put("request", request.getJSONObject("message"));
-            respMessage.put("requestHex", request.getJSONObject("requestHex"));
-            respMessage.put("requestInfo", request.getJSONObject("requestInfo"));
+            respMessage.put("requestHex", request.getString("requestHex"));
+            respMessage.put("requestInfo", request.getString("requestInfo"));
             // put response
             JSONObject response = (JSONObject) JSON.toJSON(storiMessage.getMessageFileds());
             respMessage.put("response", response);

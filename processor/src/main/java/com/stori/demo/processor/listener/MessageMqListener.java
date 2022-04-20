@@ -23,7 +23,7 @@ public class MessageMqListener implements MessageProcessService {
     @Override
     public StoriMessage createResponse(StoriMessage request) {
         // step 2: put message to processor
-        MessageLifecycle messageLifecycle = new MessageLifecycle(request.getMessageChannel(), request.getSocketId(), request.getMessageChannel(), request.getOriginMessage());
+        MessageLifecycle messageLifecycle = new MessageLifecycle(request.getMessageChannel(), request.getSocketId(), request.getMessageId(), request.getOriginMessage());
         messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
         messageManager.addMessage(messageLifecycle);
 
