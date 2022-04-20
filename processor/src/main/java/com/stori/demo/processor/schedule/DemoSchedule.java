@@ -21,6 +21,7 @@ public class DemoSchedule {
 //        String message_1200 = "";
 //
 //        StoriMessage request = new StoriMessage();
+//        request.setMessageId("123456");
 //        request.setSocketId("111000");
 //        request.setMessageChannel("123456");
 //        request.setOriginMessage(message_0800);
