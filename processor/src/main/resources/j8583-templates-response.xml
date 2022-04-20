@@ -59,4 +59,33 @@
         <field num="128" type="ALPHA" length="8" />
     </template>
 
+    <template type="1110" extends="0110">
+
+    </template>
+
+    <template type="1210" extends="0110">
+
+    </template>
+
+    <!--    base-->
+    <template type="0801">
+        <field num="7" type="DATE10" length="10" />
+        <field num="11" type="NUMERIC" length="6" />
+        <field num="39" type="ALPHA" length="2" />
+        <field num="70" type="NUMERIC" length="3" />
+        <field num="100" type="LLVAR" length="11" />
+    </template>
+
+    <template type="0810" extends="0801">
+        <field num="48" type="LLLBIN" length="512" />
+        <field num="53" type="NUMERIC" length="16" />
+        <field num="96" type="ALPHA" length="8" />
+        <field num="128" type="ALPHA" length="8" />
+    </template>
+
+    <template type="0830" extends="0801">
+        <field num="15" type="NUMERIC" length="4" />
+        <field num="33" type="LLVAR" length="11" />
+        <field num="53" type="NUMERIC" length="16" />
+    </template>
 </j8583-config>

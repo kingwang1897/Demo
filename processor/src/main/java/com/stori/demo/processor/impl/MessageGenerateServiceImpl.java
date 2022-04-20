@@ -45,14 +45,17 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
             m.setForceSecondaryBitmap(true);
             for (int i = 2; i <= 128; i++) {
                 if (m.hasField(i)) {
-                    m.setValue(i, messageLifecycle.getMessageResult().getMessageFileds().get(i), m.getField(i).getType(), m.getField(i).getLength());
+                    if (i == 38) {
+                        m.setValue(i, messageLifecycle.getHelpResult().isSuccess() ? messageLifecycle.getHelpResult().getData() : "0" , IsoType.ALPHA, 6);
+                    } else if (i == 39) {
+                        m.setValue(i, messageLifecycle.getHelpResult().isSuccess() ? Constant.MESSAGE_RESULT_SUCCESS : Constant.MESSAGE_RESULT_FAILURE, IsoType.ALPHA, 2);
+                    } else {
+                        m.setValue(i, messageLifecycle.getMessageResult().getMessageFileds().get(i), m.getField(i).getType(), m.getField(i).getLength());
+                    }
                 }
             }
 
-            m.setValue(38, messageLifecycle.getHelpResult().isSuccess() ? messageLifecycle.getHelpResult().getData() : "0" , IsoType.ALPHA, 6);
-            m.setValue(39, messageLifecycle.getHelpResult().isSuccess() ? Constant.MESSAGE_RESULT_SUCCESS : Constant.MESSAGE_RESULT_FAILURE, IsoType.ALPHA, 2);
             messageLifecycle.setMessageResult(commonMessageGenarate(m));
-
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
             messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
             return messageLifecycle;
