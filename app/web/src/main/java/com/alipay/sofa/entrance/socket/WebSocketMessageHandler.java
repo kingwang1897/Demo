@@ -71,6 +71,7 @@ public class WebSocketMessageHandler {
 
     public void handleResponse(StoriMessage storiMessage) {
         // TODO return to front
+        System.out.println("handling " + storiMessage);
         // JSONObject respMessage = new JSONObject();
         // respMessage.put("sendResult", sendResult);
         // respMessage.put("request", request);

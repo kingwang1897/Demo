@@ -10,7 +10,7 @@
     <link rel="shortcut icon" href="/favicon.ico"/>
 
     <style>
-        @import url('/lib/element-ui/theme-chalk/index.css');
+        @import url('lib/element-ui/theme-chalk/index.css');
 
         body {
             width: 98%;
@@ -35,10 +35,6 @@
             content: attr(placeholder);
             display: block;
             color: #ccc;
-        }
-
-        table tr:nth-child(even) {
-            background: #F5FAFA;
         }
 
         .float-right {
@@ -67,27 +63,20 @@
 <body>
 <div id="app" v-cloak>
     <div style="min-height: 72vh;">
-        <h1>R&D Message Test</h1>
-        <p>ISO8583 CUPS</p>
-        Templates:
-        <el-select v-model="select" @change="v=>request=v" placeholder="Select a template">
-            <el-option
-                    v-for="item in options"
-                    :key="item.label"
-                    :label="item.label"
-                    :value="item.value">
-            </el-option>
-        </el-select>
-        Transactions:
-        <el-select v-model="selectMessage" @change="messageId=>request=requests[messageId].message"
-                   placeholder="Select a transaction">
-            <el-option
-                    v-for="item in requests"
-                    :key="item.messageId"
-                    :label="item.messageId + ':'+item.status"
-                    :value="item.messageId">
-            </el-option>
-        </el-select>
+        <el-row>
+            <el-col :span="5"><h1>R&D Message Test</h1></el-col>
+            <el-col :span="3"><p style="line-height: 40px">ISO8583 CUPS</p></el-col>
+        </el-row>
+        <!--        TransactionsMap:-->
+        <!--        <el-select v-model="selectMessage" @change="messageId=>request=transactionsMap[messageId].message"-->
+        <!--                   placeholder="Select a transaction">-->
+        <!--            <el-option-->
+        <!--                    v-for="item in transactionsMap"-->
+        <!--                    :key="item.messageId"-->
+        <!--                    :label="item.messageId + ':'+item.status"-->
+        <!--                    :value="item.messageId">-->
+        <!--            </el-option>-->
+        <!--        </el-select>-->
 
         <el-row style="margin-top:10px;margin-bottom: 20px">
             <el-col :span="17">
@@ -96,6 +85,7 @@
                         :data="fields.filter(data =>  !hide || request[data.no] || response[data.no])"
                         tooltip-effect="dark"
                         border
+                        stripe
                         style="width: 100%"
                         @selection-change="handleSelectionChange">
                     <el-table-column
@@ -130,33 +120,87 @@
                     <el-table-column
                             label="Response Value">
                         <template slot-scope="scope">
-                            <el-input width="350" size="large" v-model="response[scope.row.no]"></el-input>
+                            <el-input width="350" size="large" readonly v-model="response[scope.row.no]"></el-input>
                         </template>
                     </el-table-column>
                 </el-table>
-                <!--                <div style="margin-top: 20px">-->
-                <!--                    <el-button @click="toggleSelection([tableData[1], tableData[2]])">切换第二、第三行的选中状态</el-button>-->
-                <!--                    <el-button @click="toggleSelection()">取消选择</el-button>-->
-                <!--                </div>-->
             </el-col>
             <el-col :span="7">
-                <el-row style="margin-bottom: 20px">
-                    <el-switch
-                            v-model="hide"
-                            inactive-text="ShowEmpty"
-                            active-text="HideEmpty">
-                    </el-switch>
-                    &nbsp;&nbsp;
-                    <el-switch
-                            v-model="post"
-                            inactive-text="Socket"
-                            active-text="Post">
-                    </el-switch>
+                <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
+                    <el-col :span="14"> Templates:
+                        <el-select v-model="select" style="width: 60%;" @change="v=>request=v"
+                                   placeholder="Select a template">
+                            <el-option
+                                    v-for="item in options"
+                                    :key="item.label"
+                                    :label="item.label"
+                                    :value="item.value">
+                            </el-option>
+                        </el-select>
+                    </el-col>
+                    <el-col :span="8">
+                        <el-button type="primary" style="width: 100%;" v-loading="loading"
+                                   @click="submitForm">
+                            Send
+                        </el-button>
+                    </el-col>
                 </el-row>
-                <el-row style="margin-bottom: 20px">
-                    <el-button type="primary" v-loading="loading" @click="submitForm">Send</el-button>
+                <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
+                    <el-col :span="14"> HideFields:
+                        <el-switch
+                                v-model="hide">
+                        </el-switch>
+                    </el-col>
+                    <el-col :span="8"> Socket/Post:
+                        <el-switch
+                                v-model="post">
+                        </el-switch>
+                    </el-col>
                 </el-row>
-                <el-row style="margin-bottom: 20px">
+                <el-row style="margin-bottom: 15px">
+                    Transactions:
+                    <br/>
+                    <el-table
+                            ref="singleTable"
+                            :data="transactions"
+                            max-height="250"
+                            border
+                            stripe
+                            style="width: 100%"
+                            highlight-current-row
+                            @current-change="handleCurrentChange">
+                        <el-table-column type="expand" width="40">
+                            <template slot-scope="props">
+                                <el-form label-position="left" inline class="demo-table-expand">
+                                    <el-form-item label="MessageId">
+                                        <span>{{ props.row.messageId }}</span>
+                                    </el-form-item>
+                                    <el-form-item label="Status">
+                                        <span>{{ props.row.status }}</span>
+                                    </el-form-item>
+                                </el-form>
+                            </template>
+                        </el-table-column>
+                        <el-table-column
+                                label="MessageId"
+                                show-overflow-tooltip>
+                            <template slot-scope="scope">{{ scope.row.messageId }}</template>
+                        </el-table-column>
+                        <el-table-column
+                                label="Status"
+                                show-overflow-tooltip
+                                width="150">
+                            <template slot-scope="scope">
+                                <i :class="scope.row.status === 'Pending' ? 'el-icon-loading' : (scope.row.status === 'Done' ?'el-icon-success':'el-icon-error')"></i>
+                                <el-tag
+                                        :type="scope.row.status === 'Pending' ? 'warning' : (scope.row.status === 'Done' ?'success':'error')"
+                                        disable-transitions>{{scope.row.status}}
+                                </el-tag>
+                            </template>
+                        </el-table-column>
+                    </el-table>
+                </el-row>
+                <el-row style="margin-bottom: 2px">
                     Console:
                     <br/>
                     <div style="border: 1px solid gray;width: 100%;height: 600px;text-align: left;overflow-x: auto !important;overflow-y: auto !important"
@@ -186,10 +230,10 @@
     </div>
 </div>
 </body>
-<script src="/lib/vue/vue.js"></script>
-<script src="/lib/element-ui/index.js"></script>
-<script src="/lib/axios.min.js"></script>
-
+<script src="lib/vue/vue.js"></script>
+<script src="lib/element-ui/index.js"></script>
+<script src="lib/axios.min.js"></script>
+<script src="lib/websocket-builder.js"></script>
 <script>
     function groupBy(list, fn) {
         const groups = {}
@@ -203,6 +247,16 @@
 
     new Vue({
         methods: {
+            generateSocketId() {
+                const cachedSocketId = localStorage.getItem("SOCKET_ID")
+                if (cachedSocketId) {
+                    return cachedSocketId
+                } else {
+                    const socketId = this.generateUuid();
+                    localStorage.setItem("SOCKET_ID", socketId)
+                    return socketId;
+                }
+            },
             generateUuid() {
                 const s = [];
                 const hexDigits = "0123456789abcdef";
@@ -215,49 +269,23 @@
                 const uuid = s.join("");
                 return uuid;
             },
-            processEvent(evt) {
-                const response = JSON.parse(evt.data)
-                console.log("received:", response)
-                if (response.code == 10002) {
-                    console.log("message :", response)
-                    if (this.requests[response.messageId].status == "Pending") {
-                        this.requests[response.messageId].status = "Done"
-                        this.response = response.data.response
-                    } else {
-                        this.$message({
-                            type: 'error',
-                            message: `received a timed out message:${response.messageId},discard!`
-                        })
-                    }
-                    this.info.push({
-                        type: 'recv',
-                        time: this.formatDate(new Date()),
-                        message: response.data
-                    })
-                    this.chatScrollTop()
-                }
-            },
-            createWebSocket: function (socketId) {
+            createWebSocket: function () {
                 const that = this
-                this.ws = new WebSocket(`ws://${location.host}/request/${socketId}`)
-                this.ws.onopen = function () {
-                    console.log('Opened ' + that.socketId)
-                    that.ws.send(
-                        JSON.stringify({
-                            code: 10000,
-                            message: 'start'
+                if (window.socket) {
+                    window.socket.close()
+                }
+                window.socket = WebSockets.newBuilder()
+                    .setUrl(`ws://${location.host}/request/${that.socketId}`)
+                    .onMessage(this.handleEvent)
+                    .onOpen(() => {
+                        console.log('Opened ' + that.socketId)
+                        window.socket.send({code: 10000, message: 'start'})
+                        that.$message({
+                            type: 'success',
+                            message: "WebSocket connected with socketId " + that.socketId
                         })
-                    )
-                }
-                this.ws.onmessage = function (evt) {
-                    that.processEvent(evt)
-                }
-                this.ws.onclose = function () {
-                    console.log('Closed')
-                }
-                this.ws.onerror = function (err) {
-                    console.log(err)
-                }
+                    }).build()
+                window.socket.connect()
             },
             toggleSelection(rows) {
                 if (rows) {
@@ -284,6 +312,12 @@
             },
             handleSelectionChange(val) {
                 this.multipleSelection = val;
+            },
+            handleCurrentChange(row) {
+                console.log('handleCurrentChange', row)
+                console.log('val.message', row.message)
+                this.request = row.message
+                this.response = row.response
             },
             formatDate: function (date) {
                 const seperator1 = "-";
@@ -325,9 +359,9 @@
             countDown(messageId) {
                 const that = this
                 setTimeout(() => {
-                    if (that.requests[messageId].status === 'Pending') {
+                    if (that.transactionsMap[messageId].status === 'Pending') {
                         //TODO 冲正
-                        that.requests[messageId].status = "TimedOut"
+                        that.transactionsMap[messageId].status = "TimedOut"
                         console.log(`${messageId} Timed out , reversing.`)
                         that.$message({
                             type: 'error',
@@ -335,6 +369,29 @@
                         })
                     }
                 }, 15 * 1000)
+            },
+            handleEvent(evt) {
+                const response = JSON.parse(evt.data)
+                console.log("received:", response)
+                if (response.code == 10002) {
+                    console.log("message :", response)
+                    if (this.transactionsMap[response.messageId].status == "Pending") {
+                        this.transactionsMap[response.messageId].status = "Done"
+                        this.response = response.data.response
+                        this.transactionsMap[response.messageId].response = response.data.response
+                    } else {
+                        this.$message({
+                            type: 'error',
+                            message: `received a timed out message:${response.messageId},discard!`
+                        })
+                    }
+                    this.info.push({
+                        type: 'recv',
+                        time: this.formatDate(new Date()),
+                        message: response.data
+                    })
+                    this.chatScrollTop()
+                }
             },
             sendRequest() {
                 const that = this
@@ -345,13 +402,21 @@
                     status: "Pending",
                     time: this.formatDate(new Date()),
                     messageId: messageId,
-                    message: that.request
+                    message: JSON.parse(JSON.stringify(this.request))
                 }
                 const str = JSON.stringify(message)
-                that.ws.send(str)
-                that.requests[messageId] = message
-                that.info.push(JSON.parse(str))
-                that.countDown(messageId)
+                if (window.socket && window.socket.isOpen()) {
+                    window.socket.send(message)
+                    that.transactionsMap[messageId] = message
+                    that.transactions.unshift(message)
+                    that.info.push(JSON.parse(str))
+                    that.countDown(messageId)
+                } else {
+                    that.$message({
+                        type: 'error',
+                        message: "WebSocket lose connection,send failed!"
+                    })
+                }
             },
             postRequest() {
                 const that = this
@@ -426,7 +491,8 @@
             };
             return {
                 socketId: null,
-                requests: {},
+                transactionsMap: {},
+                transactions: [],
                 hide: false,
                 post: false,
                 select: null,
@@ -451,8 +517,8 @@
         },
         mounted() {
             this.getData()
-            this.socketId = this.generateUuid();
-            this.createWebSocket(this.socketId)
+            this.socketId = this.generateSocketId();
+            this.createWebSocket()
         }
     })
 </script>
