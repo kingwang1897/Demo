@@ -28,8 +28,8 @@ public class WebSocketMessageHandler {
     private MessageService messageService;
     @Resource
     private MqProducerService mqProducerService;
-    @Resource
-    private MessageTester defaultMessageTester;
+    // @Resource
+    // private MessageTester defaultMessageTester;
     /**
      * Store the request by messageId for matching the response.
      */
@@ -54,24 +54,7 @@ public class WebSocketMessageHandler {
         storiMessage.setSocketId(socketId);
         storiMessage.setMessageId(messageId);
         storiMessage.setOriginMessage(hex);
-        String info = defaultMessageTester.parse(hex);
-        //send to mq
-        boolean send = mqProducerService.sendMessage(JSONObject.toJSONString(storiMessage));
-        if (send) {
-            //Store the request
-            request.put("requestHex", hex);
-            request.put("requestInfo", info);
-            messageStorage.put(messageId, request);
-        } else if (!debug) {
-            //Fail to front
-            JSONObject responseBody = new JSONObject();
-            responseBody.put("code", 10003);
-            responseBody.put("messageId", messageId);
-            responseBody.put("reason", "send to queue failed.");
-            WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
-            return;
-        }
-
+        //   String info = defaultMessageTester.parse(hex);
         // TODO for debug, need remove after processing service completed.
         // debug start
         if (debug) {
@@ -79,7 +62,7 @@ public class WebSocketMessageHandler {
             JSONObject respMessage = new JSONObject();
             respMessage.put("request", message);
             respMessage.put("requestHex", hex);
-            respMessage.put("requestInfo", info);
+            // respMessage.put("requestInfo", info);
             // mock response
             JSONObject response = (JSONObject) message.clone();
             response.put("0", "0110");
@@ -95,9 +78,25 @@ public class WebSocketMessageHandler {
             responseBody.put("messageId", messageId);
             responseBody.put("data", respMessage);
             WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+            return;
         }
         // debug End
-
+        // send to mq
+        boolean send = mqProducerService.sendMessage(JSONObject.toJSONString(storiMessage));
+        if (send) {
+            // Store the request
+            request.put("requestHex", hex);
+            // request.put("requestInfo", info);
+            messageStorage.put(messageId, request);
+        } else {
+            // Fail to front
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("code", 10003);
+            responseBody.put("messageId", messageId);
+            responseBody.put("reason", "send to queue failed.");
+            WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+            return;
+        }
     }
 
     public void handleResponse(StoriMessage storiMessage) {
@@ -107,7 +106,7 @@ public class WebSocketMessageHandler {
         if (validate(storiMessage)) {
             String messageId = storiMessage.getMessageId();
             String socketId = storiMessage.getSocketId();
-            String info = defaultMessageTester.parse(storiMessage.getOriginMessage());
+            // String info = defaultMessageTester.parse(storiMessage.getOriginMessage());
             JSONObject request = messageStorage.getIfPresent(messageId);
             if (Objects.isNull(request)) {
                 logger.error("can not found id {}'s request message in messageStorage,fail to front", messageId);
@@ -128,7 +127,7 @@ public class WebSocketMessageHandler {
             JSONObject response = (JSONObject) JSON.toJSON(storiMessage.getMessageFileds());
             respMessage.put("response", response);
             respMessage.put("responseHex", storiMessage.getOriginMessage());
-            respMessage.put("responseInfo", info);
+            // respMessage.put("responseInfo", info);
             // create response body
             JSONObject responseBody = new JSONObject();
             responseBody.put("code", 10002);

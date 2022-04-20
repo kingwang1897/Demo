@@ -118,14 +118,14 @@
                             show-overflow-tooltip>
                         <template slot-scope="scope"><h2>{{ scope.row.desc }}</h2></template>
                     </el-table-column>
-                    <el-table-column
-                            label="Format"
-                            show-overflow-tooltip
-                            width="200">
-                        <template slot-scope="scope"><h2>
-                            {{ scope.row.type + (scope.row.fixed ? "" : "..") + scope.row.length + (scope.row.format ? "(" + scope.row.format + ")" : "")
-                            }}</h2></template>
-                    </el-table-column>
+                    <!--                    <el-table-column-->
+                    <!--                            label="Format"-->
+                    <!--                            show-overflow-tooltip-->
+                    <!--                            width="200">-->
+                    <!--                        <template slot-scope="scope"><h2>-->
+                    <!--                            {{ scope.row.type + (scope.row.fixed ? "" : "..") + scope.row.length + (scope.row.format ? "(" + scope.row.format + ")" : "")-->
+                    <!--                            }}</h2></template>-->
+                    <!--                    </el-table-column>-->
                     <el-table-column
                             label="Request Value"
                             :render-header="renderRequestHeader"
@@ -164,17 +164,19 @@
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
-                    <el-col :span="8"> HideFields:
+                    <el-col :span="8"><span title="Hide the empty field rows.">HideEmpty</span>
+                        :
                         <el-switch
                                 v-model="hide">
                         </el-switch>
                     </el-col>
-                    <el-col :span="8"> Debug:
+                    <el-col :span="8"><span title="Return a mock response immediately.">Debug</span>:
                         <el-switch
                                 v-model="debug">
                         </el-switch>
                     </el-col>
-                    <el-col :span="8"> Socket/Post:
+                    <el-col :span="8"><span
+                            title="Submit the message using WebSocket(async) or Http(sync).">Socket/Post</span> :
                         <el-switch
                                 v-model="post">
                         </el-switch>
@@ -578,7 +580,7 @@
                 request: {},
                 fields: [],
                 info: [],
-                debug: true,
+                debug: false,
                 connected: false,
                 hide: false,
                 post: false,
