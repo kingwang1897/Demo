@@ -133,13 +133,14 @@
             <el-col :span="7">
                 <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
                     <el-col :span="14"> Templates:
-                        <el-select v-model="select" style="width: 60%;" @change="v=>request=v"
+                        <el-select v-model="select" style="width: 60%;"
+                                   @change="key=>request=JSON.parse(JSON.stringify(optionsMap[key]))"
                                    placeholder="Select a template">
                             <el-option
                                     v-for="item in options"
                                     :key="item.label"
                                     :label="item.label"
-                                    :value="item.value">
+                                    :value="item.label">
                             </el-option>
                         </el-select>
                     </el-col>
@@ -489,11 +490,13 @@
                 })
                 axios.get("/message/templates").then(response => {
                     that.options = []
+                    that.optionsMap = {}
                     for (const k in response.data) {
                         const v = {}
                         for (const j in response.data[k]) {
                             v[j] = response.data[k][j].value
                         }
+                        that.optionsMap[k] = v
                         that.options.push(
                             {
                                 label: k,
@@ -517,22 +520,23 @@
                 }
             };
             return {
-                socketId: null,
-                debug: true,
-                socket: null,
-                connected: false,
-                transactionsMap: {},
-                transactions: [],
-                hide: false,
-                post: false,
-                select: null,
-                selectMessage: null,
-                loading: false,
                 response: {},
                 request: {},
                 fields: [],
                 info: [],
+                debug: true,
+                connected: false,
+                hide: false,
+                post: false,
+                loading: false,
                 options: [],
+                optionsMap: {},
+                transactions: [],
+                transactionsMap: {},
+                socketId: null,
+                socket: null,
+                select: null,
+                selectMessage: null,
                 multipleSelection: [],
                 rules: {
                     name: [
