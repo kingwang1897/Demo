@@ -59,24 +59,34 @@
         }
 
         .socket-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 90px;
+        }
+
+        .socket-status-container {
+            z-index: 100;
             position: absolute;
             top: 10px;
             right: 10px;
             width: 20px;
             height: 20px;
-            border-radius: 90px;
-            /*background: #13ce66;*/
-            /*background: #dd6161;*/
         }
     </style>
 </head>
 
 <body>
 <div id="app" v-cloak>
-    <div class="socket-status"
-         :title="connected?'Websocket connected':'Websocket disconnected'"
-         :style="{'background': connected ? '#13ce66' : '#dd6161'}"
-    ></div>
+    <div class="socket-status-container">
+        <el-tooltip effect="dark" :content="connected?'Websocket connected':'Websocket disconnected'"
+                    placement="left">
+            <div class="socket-status"
+                 :style="{'background': connected ? '#13ce66' : '#dd6161'}"
+            ></div>
+        </el-tooltip>
+    </div>
+
+
     <div style="min-height: 72vh;">
         <el-row>
             <el-col :span="5"><h1>R&D Message Test</h1></el-col>
@@ -117,13 +127,15 @@
                             }}</h2></template>
                     </el-table-column>
                     <el-table-column
-                            label="Request Value">
+                            label="Request Value"
+                            :render-header="renderRequestHeader"
+                    >
                         <template slot-scope="scope">
                             <el-input width="350" size="large" v-model="request[scope.row.no]"></el-input>
                         </template>
                     </el-table-column>
                     <el-table-column
-                            label="Response Value">
+                            label="Response Value" :render-header="renderResponseHeader">
                         <template slot-scope="scope">
                             <el-input width="350" size="large" readonly v-model="response[scope.row.no]"></el-input>
                         </template>
@@ -134,7 +146,7 @@
                 <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
                     <el-col :span="14"> Templates:
                         <el-select v-model="select" style="width: 60%;"
-                                   @change="key=>request=JSON.parse(JSON.stringify(optionsMap[key]))"
+                                   @change="key=>request=key?JSON.parse(JSON.stringify(optionsMap[key])):{}"
                                    placeholder="Select a template">
                             <el-option
                                     v-for="item in options"
@@ -258,6 +270,48 @@
 
     new Vue({
         methods: {
+            renderRequestHeader(h, {column, $index}, type) {
+                let that = this;
+                return h(
+                    'div', [
+                        h('span', column.label),
+                        h('el-button', {
+                            props: {
+                                type: 'text',
+                                size: 'small',
+                            },
+                            style: 'margin-left: 5px;',
+                            on: {
+                                click: function () {
+                                    that.request = {};
+                                    that.response = {};
+                                    that.select = null;
+                                }
+                            }
+                        }, 'Clear')
+                    ],
+                )
+            },
+            renderResponseHeader(h, {column, $index}, type) {
+                let that = this;
+                return h(
+                    'div', [
+                        h('span', column.label),
+                        h('el-button', {
+                            props: {
+                                type: 'text',
+                                size: 'small',
+                            },
+                            style: 'margin-left: 5px;',
+                            on: {
+                                click: function () {
+                                    that.response = {};
+                                }
+                            }
+                        }, 'Clear')
+                    ],
+                )
+            },
             generateSocketId() {
                 const cachedSocketId = localStorage.getItem("SOCKET_ID")
                 if (cachedSocketId) {
