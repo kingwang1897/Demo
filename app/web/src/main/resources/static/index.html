@@ -315,12 +315,12 @@
                 )
             },
             generateSocketId() {
-                const cachedSocketId = localStorage.getItem("SOCKET_ID")
+                const cachedSocketId = sessionStorage.getItem("SOCKET_ID")
                 if (cachedSocketId) {
                     return cachedSocketId
                 } else {
                     const socketId = this.generateUuid();
-                    localStorage.setItem("SOCKET_ID", socketId)
+                    sessionStorage.setItem("SOCKET_ID", socketId)
                     return socketId;
                 }
             },
