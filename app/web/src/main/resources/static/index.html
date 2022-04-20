@@ -74,6 +74,7 @@
 <body>
 <div id="app" v-cloak>
     <div class="socket-status"
+         :title="connected?'Websocket connected':'Websocket disconnected'"
          :style="{'background': connected ? '#13ce66' : '#dd6161'}"
     ></div>
     <div style="min-height: 72vh;">
@@ -150,9 +151,14 @@
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
-                    <el-col :span="14"> HideFields:
+                    <el-col :span="18"> HideFields:
                         <el-switch
                                 v-model="hide">
+                        </el-switch>
+                    </el-col>
+                    <el-col :span="18"> Debug:
+                        <el-switch
+                                v-model="debug">
                         </el-switch>
                     </el-col>
                     <el-col :span="8"> Socket/Post:
@@ -197,7 +203,7 @@
                             <template slot-scope="scope">
                                 <i :class="scope.row.status === 'Pending' ? 'el-icon-loading' : (scope.row.status === 'Done' ?'el-icon-success':'el-icon-error')"></i>
                                 <el-tag
-                                        :type="scope.row.status === 'Pending' ? 'warning' : (scope.row.status === 'Done' ?'success':'error')"
+                                        :type="scope.row.status === 'Pending' ? 'warning' : (scope.row.status === 'Done' ?'success':'danger')"
                                         disable-transitions>{{scope.row.status}}
                                 </el-tag>
                             </template>
@@ -394,7 +400,7 @@
                     } else {
                         this.$message({
                             type: 'error',
-                            message: `received a timed out message:${response.messageId},discard!`
+                            message: `received a timed out message: ${response.messageId},discard!`
                         })
                     }
                     this.info.push({
@@ -403,6 +409,14 @@
                         message: response.data
                     })
                     this.chatScrollTop()
+                } else if (response.code == 10003) {
+                    this.transactionsMap[response.messageId].status = "Failed"
+                    this.$message({
+                        type: 'error',
+                        message: `message handle error,reason: ${response.reason}!`
+                    })
+                } else {
+                    console.log('received an unsupported message', response)
                 }
             },
             sendRequest() {
@@ -412,6 +426,7 @@
                     code: 10001,
                     type: 'send',
                     status: "Pending",
+                    debug: this.debug,
                     time: this.formatDate(new Date()),
                     messageId: messageId,
                     message: JSON.parse(JSON.stringify(this.request))
@@ -503,6 +518,7 @@
             };
             return {
                 socketId: null,
+                debug: true,
                 socket: null,
                 connected: false,
                 transactionsMap: {},

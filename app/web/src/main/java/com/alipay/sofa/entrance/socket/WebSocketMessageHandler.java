@@ -7,12 +7,19 @@ import com.alipay.sofa.entrance.web.service.MessageService;
 import com.alipay.sofa.model.StoriMessage;
 import com.alipay.sofa.mq.producer.service.MqProducerService;
 import com.alipay.sofa.util.MessageTester;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.LoadingCache;
 import com.solab.iso8583.IsoMessage;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class WebSocketMessageHandler {
@@ -23,12 +30,20 @@ public class WebSocketMessageHandler {
     private MqProducerService mqProducerService;
     @Resource
     private MessageTester defaultMessageTester;
+    /**
+     * Store the request by messageId for matching the response.
+     */
+    private Cache<String, JSONObject> messageStorage = CacheBuilder.newBuilder()
+            .maximumSize(3000)
+            .expireAfterWrite(24, TimeUnit.HOURS)
+            .build();
 
 
     public void handleRequest(String socketId, JSONObject request) {
         logger.info("Received json message {}", request);
         JSONObject message = request.getJSONObject("message");
         String messageId = request.getString("messageId");
+        boolean debug = request.getBoolean("debug");
         logger.info("handling socketId:{} messageId:{} message:{}", socketId, messageId, message);
         // generate iso message
         IsoMessage isoMessage = messageService.of(message);
@@ -39,48 +54,119 @@ public class WebSocketMessageHandler {
         storiMessage.setSocketId(socketId);
         storiMessage.setMessageId(messageId);
         storiMessage.setOriginMessage(hex);
-        //send to mq
-        boolean sendResult = mqProducerService.sendMessage(JSONObject.toJSONString(storiMessage));
-        if (!sendResult) {
-            // TODO 发送消息异常处理，直接返回
-        }
-        // TODO for debug, need remove after processing service completed.
         String info = defaultMessageTester.parse(hex);
+        //send to mq
+        boolean send = mqProducerService.sendMessage(JSONObject.toJSONString(storiMessage));
+        if (send) {
+            //Store the request
+            request.put("requestHex", hex);
+            request.put("requestInfo", info);
+            messageStorage.put(messageId, request);
+        } else if (!debug) {
+            //Fail to front
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("code", 10003);
+            responseBody.put("messageId", messageId);
+            responseBody.put("reason", "send to queue failed.");
+            WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+            return;
+        }
 
-        JSONObject response = (JSONObject) message.clone();
-        response.put("0", "0110");
-        response.put("38", "123323");
-        response.put("39", "00");
-
-        JSONObject respMessage = new JSONObject();
-        respMessage.put("request", message);
-        respMessage.put("requestHex", hex);
-        respMessage.put("requestInfo", info);
-        // put response
-        respMessage.put("response", response);
-        respMessage.put("responseHex", "origin str from output");
-        respMessage.put("responseInfo", "response info");
-
-        JSONObject responseBody = new JSONObject();
-        responseBody.put("code", 10002);
-        responseBody.put("messageId", messageId);
-        responseBody.put("data", respMessage);
-        WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+        // TODO for debug, need remove after processing service completed.
+        // debug start
+        if (debug) {
+            // create response message
+            JSONObject respMessage = new JSONObject();
+            respMessage.put("request", message);
+            respMessage.put("requestHex", hex);
+            respMessage.put("requestInfo", info);
+            // mock response
+            JSONObject response = (JSONObject) message.clone();
+            response.put("0", "0110");
+            response.put("38", "123323");
+            response.put("39", "00");
+            // put response
+            respMessage.put("response", response);
+            respMessage.put("responseHex", "origin str from output");
+            respMessage.put("responseInfo", "response info");
+            // create response body
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("code", 10002);
+            responseBody.put("messageId", messageId);
+            responseBody.put("data", respMessage);
+            WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+        }
         // debug End
+
     }
 
     public void handleResponse(StoriMessage storiMessage) {
-        // TODO return to front
+        // return to front
         System.out.println("handling " + storiMessage);
-        // JSONObject respMessage = new JSONObject();
-        // respMessage.put("sendResult", sendResult);
-        // respMessage.put("request", request);
-        // respMessage.put("requestHex", hex);
-        // respMessage.put("requestInfo", info);
-        // respMessage.put("response", "key:value");
-        // respMessage.put("responseHex", "origin str from output");
-        // respMessage.put("responseInfo", "response info");
-        // resp.put("message", respMessage);
+        // pre check
+        if (validate(storiMessage)) {
+            String messageId = storiMessage.getMessageId();
+            String socketId = storiMessage.getSocketId();
+            String info = defaultMessageTester.parse(storiMessage.getOriginMessage());
+            JSONObject request = messageStorage.getIfPresent(messageId);
+            if (Objects.isNull(request)) {
+                logger.error("can not found id {}'s request message in messageStorage,fail to front", messageId);
+                JSONObject responseBody = new JSONObject();
+                responseBody.put("code", 10003);
+                responseBody.put("messageId", messageId);
+                responseBody.put("reason", "request message not found.");
+                WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+                return;
+            }
+            // create response message
+            JSONObject respMessage = new JSONObject();
+            // put request
+            respMessage.put("request", request.getJSONObject("message"));
+            respMessage.put("requestHex", request.getJSONObject("requestHex"));
+            respMessage.put("requestInfo", request.getJSONObject("requestInfo"));
+            // put response
+            JSONObject response = (JSONObject) JSON.toJSON(storiMessage.getMessageFileds());
+            respMessage.put("response", response);
+            respMessage.put("responseHex", storiMessage.getOriginMessage());
+            respMessage.put("responseInfo", info);
+            // create response body
+            JSONObject responseBody = new JSONObject();
+            responseBody.put("code", 10002);
+            responseBody.put("messageId", messageId);
+            responseBody.put("data", respMessage);
+            WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+        } else {
+            logger.error("check failed message : {}", JSON.toJSONString(storiMessage));
+        }
+    }
+
+    private boolean validate(StoriMessage storiMessage) {
+        // todo exception handling,may store to rds.
+        if (Objects.isNull(storiMessage)) {
+            logger.error("Received an empty StoriMessage discard.");
+            return false;
+        }
+        String messageId = storiMessage.getMessageId();
+        if (StringUtils.isBlank(messageId)) {
+            logger.error("prop messageId not found in StoriMessage discard.");
+            return false;
+        }
+        String socketId = storiMessage.getSocketId();
+        if (StringUtils.isBlank(socketId)) {
+            logger.error("prop socketId not found in StoriMessage discard.");
+            return false;
+        }
+        String originMessage = storiMessage.getOriginMessage();
+        if (StringUtils.isBlank(originMessage)) {
+            logger.error("prop originMessage not found in StoriMessage discard.");
+            return false;
+        }
+        Map<Integer, String> messageFileds = storiMessage.getMessageFileds();
+        if (Objects.isNull(messageFileds) || messageFileds.isEmpty()) {
+            logger.error("messageFileds is empty in StoriMessage discard.");
+            return false;
+        }
+        return true;
     }
 
 }
