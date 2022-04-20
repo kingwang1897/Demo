@@ -61,6 +61,6 @@ public class MessageHandleServiceImpl implements MessageHandleService {
 
     @Override
     public HelpResult handleForUser(MessageResult messageResult){
-        return HelpResult.ok("123323");
+        return HelpResult.ok("123456");
     }
 }
