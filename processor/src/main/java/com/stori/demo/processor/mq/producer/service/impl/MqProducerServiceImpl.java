@@ -1,6 +1,7 @@
 package com.stori.demo.processor.mq.producer.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.stori.demo.processor.mq.consumer.properties.MqConsumerProperties;
 import com.stori.demo.processor.mq.producer.service.MqProducerService;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -23,6 +24,9 @@ public class MqProducerServiceImpl implements MqProducerService {
     @Autowired
     private DefaultMQProducer defaultMQProducer;
 
+    @Autowired
+    private MqConsumerProperties mqConsumerProperties;
+
     /**
      * @see MqProducerService#sendMessage(String)
      */
@@ -32,7 +36,7 @@ public class MqProducerServiceImpl implements MqProducerService {
 
         SendResult sendResult;
         try {
-            Message message = new Message("RESPONSE_QUEUE", "tag", msg.getBytes(RemotingHelper.DEFAULT_CHARSET));
+            Message message = new Message("RESPONSE_QUEUE", mqConsumerProperties.getTags(), msg.getBytes(RemotingHelper.DEFAULT_CHARSET));
             sendResult = defaultMQProducer.send(message);
         } catch (Exception e) {
             LOGGER.error("消息发送失败, msg:{}, cause:{}", msg, e);

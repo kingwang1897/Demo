@@ -1,6 +1,7 @@
 package com.stori.demo.processor.mq.consumer.listener;
 
 import com.stori.demo.processor.mq.consumer.enums.MqConsumerBeanEnum;
+import com.stori.demo.processor.mq.consumer.properties.MqConsumerProperties;
 import com.stori.demo.processor.mq.consumer.service.MqConsumerService;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.exception.MQClientException;
@@ -8,6 +9,7 @@ import org.apache.rocketmq.common.message.MessageExt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
@@ -25,6 +27,9 @@ public class DefaultConsumerListener extends AbstractConsumerListener implements
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultConsumerListener.class);
 
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private MqConsumerProperties mqConsumerProperties;
 
     /**
      * 消息处理
@@ -73,7 +78,8 @@ public class DefaultConsumerListener extends AbstractConsumerListener implements
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         try {
-            super.listener("REQUEST_QUEUE", "tag");
+//            super.listener("REQUEST_QUEUE", mqConsumerProperties.getTags());
+            super.listener("REQUEST_QUEUE", mqConsumerProperties.getTags());
         } catch (MQClientException e) {
             LOGGER.error("consumer error");
         }

@@ -11,6 +11,8 @@ public class MqConsumerProperties {
 
     private String group;
 
+    private String tags;
+
     public String getNamesrvAddr() {
         return namesrvAddr;
     }
@@ -25,5 +27,13 @@ public class MqConsumerProperties {
 
     public void setGroup(String group) {
         this.group = group;
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
     }
 }
