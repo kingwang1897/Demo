@@ -94,7 +94,7 @@
         </el-row>
 
         <el-row style="margin-top:10px;margin-bottom: 20px">
-            <el-col :span="17">
+            <el-col :span="16">
                 <el-table
                         ref="multipleTable"
                         :data="fields.filter(data =>  !hide || request[data.no] || response[data.no])"
@@ -119,6 +119,7 @@
                         <template slot-scope="scope"><h2>{{ scope.row.desc }}</h2></template>
                     </el-table-column>
                     <el-table-column
+                            v-if="format"
                             label="Format"
                             show-overflow-tooltip
                             width="200">
@@ -142,7 +143,7 @@
                     </el-table-column>
                 </el-table>
             </el-col>
-            <el-col :span="7">
+            <el-col :span="8">
                 <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
                     <el-col :span="14"> Templates:
                         <el-select v-model="select" style="width: 60%;"
@@ -164,20 +165,36 @@
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
-                    <el-col :span="8"> HideFields:
-                        <el-switch
-                                v-model="hide">
-                        </el-switch>
+                    <el-col>
+                        <div style="width: 150px;"><span title="Hide the empty field rows.">HideEmpty</span>
+                            :
+                            <el-switch
+                                    v-model="hide">
+                            </el-switch>
+                        </div>
                     </el-col>
-                    <el-col :span="8"> Debug:
-                        <el-switch
-                                v-model="debug">
-                        </el-switch>
+                    <el-col>
+                        <div style="width: 120px;"><span title="Return a mock response immediately.">Debug</span>:
+                            <el-switch
+                                    v-model="debug">
+                            </el-switch>
+                        </div>
+
                     </el-col>
-                    <el-col :span="8"> Socket/Post:
-                        <el-switch
-                                v-model="post">
-                        </el-switch>
+                    <el-col>
+                        <div style="width: 120px;"><span title="Show format column.">Format</span>:
+                            <el-switch
+                                    v-model="format">
+                            </el-switch>
+                        </div>
+                    </el-col>
+                    <el-col>
+                        <div style="width: 120px;"><span
+                                title="Submit the message using WebSocket(async) or Http(sync).">Socket</span> :
+                            <el-switch
+                                    v-model="useSocket">
+                            </el-switch>
+                        </div>
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 15px">
@@ -313,12 +330,12 @@
                 )
             },
             generateSocketId() {
-                const cachedSocketId = localStorage.getItem("SOCKET_ID")
+                const cachedSocketId = sessionStorage.getItem("SOCKET_ID")
                 if (cachedSocketId) {
                     return cachedSocketId
                 } else {
                     const socketId = this.generateUuid();
-                    localStorage.setItem("SOCKET_ID", socketId)
+                    sessionStorage.setItem("SOCKET_ID", socketId)
                     return socketId;
                 }
             },
@@ -388,9 +405,10 @@
             },
             handleCurrentChange(row) {
                 console.log('handleCurrentChange', row)
-                console.log('val.message', row.message)
-                this.request = JSON.parse(JSON.stringify(row.message))
-                this.response = JSON.parse(JSON.stringify(row.response))
+                console.log('row.message', row.message)
+                console.log('row.response', row.response)
+                this.request = row.message ? JSON.parse(JSON.stringify(row.message)) : {}
+                this.response = row.response ? JSON.parse(JSON.stringify(row.response)) : {}
             },
             formatDate: function (date) {
                 const seperator1 = "-";
@@ -423,10 +441,10 @@
                 // that.loading = true
                 that.chatScrollTop()
                 that.response = {}
-                if (this.post) {
-                    that.postRequest()
-                } else {
+                if (this.useSocket) {
                     that.sendRequest()
+                } else {
+                    that.postRequest()
                 }
             },
             countDown(messageId) {
@@ -578,10 +596,11 @@
                 request: {},
                 fields: [],
                 info: [],
-                debug: true,
                 connected: false,
+                debug: false,
                 hide: false,
-                post: false,
+                useSocket: true,
+                format: false,
                 loading: false,
                 options: [],
                 optionsMap: {},

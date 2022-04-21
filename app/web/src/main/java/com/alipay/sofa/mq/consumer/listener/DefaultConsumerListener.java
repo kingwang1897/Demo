@@ -80,7 +80,7 @@ public class DefaultConsumerListener extends AbstractConsumerListener implements
         try {
             super.listener("RESPONSE_QUEUE", mqConsumerProperties.getTags());
         } catch (MQClientException e) {
-            LOGGER.error("consumer error");
+            LOGGER.error("consumer error",e);
         }
     }
 }

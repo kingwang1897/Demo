@@ -89,12 +89,11 @@ public class WebSocketServer {
 
     @OnError
     public void onError(Session session, Throwable error) {
-        logger.error("error:" + this.socketId + ", reason:" + error.getMessage());
-        error.printStackTrace();
+        logger.error("error:" + this.socketId + ", reason:" + error.getMessage(), error);
     }
 
 
-    public void sendMessage(String message) {
+    private void sendMessage(String message) {
         try {
             this.session.getBasicRemote().sendText(message);
         } catch (IOException e) {

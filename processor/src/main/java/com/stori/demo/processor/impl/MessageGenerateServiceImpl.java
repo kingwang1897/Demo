@@ -104,6 +104,7 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
                 m.getIsoHeader().length() + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII + bitMapLength));
         responseMessage.setMessageData(CommonUtil.convertStringToHex(m.debugString().substring(m.getIsoHeader().length() + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII + bitMapLength)));
         responseMessage.setMessageFileds(CommonUtil.convertMap(m));
+        responseMessage.getMessageFileds().put(0, m.debugString().substring(m.getIsoHeader().length(), m.getIsoHeader().length() + Constant.MESSAGE_TYPE_ID_LENGTH_ASCII));
         return responseMessage;
     }
 }
