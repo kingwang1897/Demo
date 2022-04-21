@@ -37,7 +37,7 @@ public class DefaultConsumerListener extends AbstractConsumerListener implements
     @Override
     public ConsumeConcurrentlyStatus onMessage(List<MessageExt> msgs) {
         for (MessageExt msg: msgs) {
-            String topicTag = msg.getTopic() + ":" + msg.getTags();
+            String topicTag = msg.getTopic();
             MqConsumerBeanEnum mqConsumerBeanEnum = MqConsumerBeanEnum.getBeanByTopicTag(topicTag);
             if (null == mqConsumerBeanEnum) {
                 break;

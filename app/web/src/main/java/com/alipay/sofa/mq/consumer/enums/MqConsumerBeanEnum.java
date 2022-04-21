@@ -7,7 +7,7 @@ public enum MqConsumerBeanEnum {
     /**
      * 报文解析handler
      */
-    MESSAGE_HANDLER("RESPONSE_QUEUE:tag", "messageHandler"),;
+    MESSAGE_HANDLER("RESPONSE_QUEUE", "messageHandler"),;
 
     private String topicTag;
 
