@@ -101,7 +101,7 @@ public class WebSocketMessageHandler {
 
     public void handleResponse(StoriMessage storiMessage) {
         // return to front
-        System.out.println("handling " + storiMessage);
+        logger.info("handling " + JSON.toJSONString(storiMessage));
         // pre check
         if (validate(storiMessage)) {
             String messageId = storiMessage.getMessageId();
@@ -115,6 +115,9 @@ public class WebSocketMessageHandler {
                 responseBody.put("messageId", messageId);
                 responseBody.put("reason", "request message not found.");
                 WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+                return;
+            } else if (StringUtils.equals(request.getString("status"), "Done")) {// idempotent check
+                logger.error("message {} is marked status 'Done', but received again, discard this message.", messageId);
                 return;
             }
             // create response message
@@ -134,6 +137,9 @@ public class WebSocketMessageHandler {
             responseBody.put("messageId", messageId);
             responseBody.put("data", respMessage);
             WebSocketServer.sendMessage(socketId, JSON.toJSONString(responseBody));
+            request.put("status", "Done");
+            // for idempotent
+            messageStorage.invalidate(messageId);
         } else {
             logger.error("check failed message : {}", JSON.toJSONString(storiMessage));
         }
