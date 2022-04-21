@@ -18,17 +18,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 package com.solab.iso8583;
 
+import com.solab.iso8583.parse.ConfigParser;
+import com.solab.iso8583.parse.DateTimeParseInfo;
+import com.solab.iso8583.parse.FieldParseInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.text.ParseException;
 import java.util.*;
-
-import com.solab.iso8583.parse.DateTimeParseInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.solab.iso8583.parse.ConfigParser;
-import com.solab.iso8583.parse.FieldParseInfo;
 
 /** This class is used to create messages, either from scratch or from an existing String or byte
  * buffer. It can be configured to put default values on newly created messages, and also to know
@@ -552,6 +551,7 @@ public class MessageFactory<T extends IsoMessage> {
                             decoder = getCustomField(i);
                         }
 						IsoValue<?> val = fpi.parseBinary(i, buf, pos, decoder);
+						val.setNeedUpdate(fpi.isNeedUpdate());
 						m.setField(i, val);
 						if (val != null) {
 							if (val.getType() == IsoType.NUMERIC || val.getType() == IsoType.DATE10

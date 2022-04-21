@@ -3,6 +3,7 @@ package com.stori.demo.processor.impl;
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
 import com.stori.demo.processor.model.HelpResult;
+import com.stori.demo.processor.model.MessageHandle;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.MessageResult;
 import com.stori.demo.processor.service.MessageHandleService;
@@ -10,6 +11,9 @@ import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * message handle
@@ -26,7 +30,7 @@ public class MessageHandleServiceImpl implements MessageHandleService {
         messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
 
         // step 1: handle messageResult
-        HelpResult helpResult;
+        HelpResult<MessageHandle> helpResult;
         switch (CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType())) {
             case Constant.MESSAGE_TYPE_ID_MANGER:
                 helpResult = handleForManager(messageLifecycle.getMessageResult());
@@ -43,6 +47,12 @@ public class MessageHandleServiceImpl implements MessageHandleService {
                 return messageLifecycle;
         }
 
+        if (!helpResult.isSuccess()) {
+            messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
+            messageLifecycle.setHelpResult(helpResult);
+            return messageLifecycle;
+        }
+
         messageLifecycle.setHelpResult(helpResult);
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
         messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
@@ -50,17 +60,26 @@ public class MessageHandleServiceImpl implements MessageHandleService {
     }
 
     @Override
-    public HelpResult handleForNotify(MessageResult messageResult) {
-        return HelpResult.ok(true);
+    public HelpResult<MessageHandle>  handleForNotify(MessageResult messageResult) {
+        return HelpResult.ok(new MessageHandle(messageResult.getType()));
     }
 
     @Override
-    public HelpResult handleForManager(MessageResult messageResult) {
-        return HelpResult.ok(true);
+    public HelpResult<MessageHandle>  handleForManager(MessageResult messageResult) {
+        MessageHandle messageHandle = new MessageHandle(messageResult.getType());
+        Map<Integer, String> messageFileds = new HashMap<>();
+        messageHandle.setMessageFileds(messageFileds);
+        messageFileds.put(39, "00");
+        return HelpResult.ok(messageHandle);
     }
 
     @Override
-    public HelpResult handleForUser(MessageResult messageResult){
-        return HelpResult.ok("123456");
+    public HelpResult<MessageHandle>  handleForUser(MessageResult messageResult){
+        MessageHandle messageHandle = new MessageHandle(messageResult.getType());
+        Map<Integer, String> messageFileds = new HashMap<>();
+        messageHandle.setMessageFileds(messageFileds);
+        messageFileds.put(38, "123456");
+        messageFileds.put(39, "00");
+        return HelpResult.ok(messageHandle);
     }
 }

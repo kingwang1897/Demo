@@ -18,20 +18,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 package com.solab.iso8583.parse;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.net.URL;
-import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.TimeZone;
-
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
 import com.solab.iso8583.*;
 import com.solab.iso8583.codecs.CompositeField;
 import com.solab.iso8583.util.HexCodec;
@@ -44,6 +30,18 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Reader;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.TimeZone;
 
 /** This class is used to parse a XML configuration file and configure
  * a MessageFactory with the values from it.
@@ -198,6 +196,7 @@ public class ConfigParser {
                     IsoValue<?> v = getTemplateField(f, mfact, true);
                     if (v != null) {
                         v.setCharacterEncoding(mfact.getCharacterEncoding());
+                        v.setNeedUpdate(Boolean.parseBoolean(f.getAttribute("needUpdate")));
                     }
                     m.setField(num, v);
                 }
@@ -311,7 +310,7 @@ public class ConfigParser {
         if (f.getAttribute("length").length() > 0) {
             length = Integer.parseInt(f.getAttribute("length"));
         }
-        FieldParseInfo fpi = FieldParseInfo.getInstance(itype, length, mfact.getCharacterEncoding());
+        FieldParseInfo fpi = FieldParseInfo.getInstance(itype, length, mfact.getCharacterEncoding(), Boolean.getBoolean(f.getAttribute("needUpdate")));
         NodeList subs = f.getElementsByTagName("field");
         if (subs != null && subs.getLength() > 0) {
             final CompositeField combo = new CompositeField();

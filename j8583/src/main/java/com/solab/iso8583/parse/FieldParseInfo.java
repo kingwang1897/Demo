@@ -18,12 +18,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 package com.solab.iso8583.parse;
 
-import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
-
 import com.solab.iso8583.CustomField;
 import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
+
+import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
 
 /** This class is used to parse a field from a message buffer. There are concrete subclasses for each IsoType.
  * 
@@ -37,6 +37,7 @@ public abstract class FieldParseInfo {
     protected boolean forceStringDecoding;
     protected boolean forceHexadecimalLength;
     private CustomField<?> decoder;
+    private boolean needUpdate;
 
 	/** Creates a new instance that parses a value of the specified type, with the specified length.
 	 * The length is only useful for ALPHA and NUMERIC types.
@@ -87,6 +88,14 @@ public abstract class FieldParseInfo {
          return decoder;
     }
 
+	public boolean isNeedUpdate() {
+		return needUpdate;
+	}
+
+	public void setNeedUpdate(boolean needUpdate) {
+		this.needUpdate = needUpdate;
+	}
+
 	/** Parses the character data from the buffer and returns the
 	 * IsoValue with the correct data type in it.
      * @param field The field index, useful for error reporting.
@@ -106,6 +115,12 @@ public abstract class FieldParseInfo {
 	public abstract <T> IsoValue<?> parseBinary(final int field, byte[] buf, int pos,
                                             CustomField<T> custom)
             throws ParseException, UnsupportedEncodingException;
+
+	public static FieldParseInfo getInstance(IsoType t, int len, String encoding, boolean needUpdate) {
+		FieldParseInfo fieldParseInfo = getInstance(t, len, encoding);
+		fieldParseInfo.setNeedUpdate(needUpdate);
+		return fieldParseInfo;
+	}
 
 	/** Returns a new FieldParseInfo instance that can parse the specified type. */
 	public static FieldParseInfo getInstance(IsoType t, int len, String encoding) {
