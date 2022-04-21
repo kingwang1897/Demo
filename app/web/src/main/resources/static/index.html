@@ -72,6 +72,18 @@
             width: 20px;
             height: 20px;
         }
+
+        .el-dropdown {
+            vertical-align: top;
+        }
+
+        .el-dropdown + .el-dropdown {
+            margin-left: 15px;
+        }
+
+        .el-icon-arrow-down {
+            font-size: 12px;
+        }
     </style>
 </head>
 
@@ -80,63 +92,53 @@
     <div class="socket-status-container">
         <el-tooltip effect="dark" :content="connected?'Websocket connected':'Websocket disconnected'"
                     placement="left">
-            <div class="socket-status"
-                 :style="{'background': connected ? '#13ce66' : '#dd6161'}"
-            ></div>
+            <div class="socket-status" :style="{'background': connected ? '#13ce66' : '#dd6161'}"></div>
         </el-tooltip>
     </div>
 
 
     <div style="min-height: 72vh;">
         <el-row>
-            <el-col :span="5"><h1>R&D Message Test</h1></el-col>
-            <el-col :span="3"><p style="line-height: 40px">ISO8583 CUPS</p></el-col>
+            <el-col :span="5">
+                <h1>R&D Message Test</h1>
+            </el-col>
+            <el-col :span="3">
+                <p style="line-height: 40px">ISO8583 CUPS</p>
+            </el-col>
         </el-row>
 
         <el-row style="margin-top:10px;margin-bottom: 20px">
             <el-col :span="16">
-                <el-table
-                        ref="multipleTable"
-                        :data="fields.filter(data =>  !hide || request[data.no] || response[data.no])"
-                        tooltip-effect="dark"
-                        border
-                        stripe
-                        style="width: 100%"
-                        @selection-change="handleSelectionChange">
-                    <el-table-column
-                            type="selection"
-                            width="40">
+                <el-table ref="multipleTable"
+                          :data="fields.filter(data =>  !hide || request[data.no] || response[data.no])"
+                          tooltip-effect="dark" border stripe style="width: 100%"
+                          @selection-change="handleSelectionChange">
+                    <el-table-column type="selection" width="40">
                     </el-table-column>
-                    <el-table-column
-                            label="Field"
-                            width="100">
-                        <template slot-scope="scope"><h2>{{ scope.row.no }}</h2></template>
+                    <el-table-column label="Field" width="100">
+                        <template slot-scope="scope">
+                            <h2>{{ scope.row.no }}</h2>
+                        </template>
                     </el-table-column>
-                    <el-table-column
-                            prop="desc"
-                            label="Desc"
-                            show-overflow-tooltip>
-                        <template slot-scope="scope"><h2>{{ scope.row.desc }}</h2></template>
+                    <el-table-column prop="desc" label="Desc" show-overflow-tooltip>
+                        <template slot-scope="scope">
+                            <h2>{{ scope.row.desc }}</h2>
+                        </template>
                     </el-table-column>
-                    <el-table-column
-                            v-if="format"
-                            label="Format"
-                            show-overflow-tooltip
-                            width="200">
-                        <template slot-scope="scope"><h2>
-                            {{ scope.row.type + (scope.row.fixed ? "" : "..") + scope.row.length + (scope.row.format ? "(" + scope.row.format + ")" : "")
-                            }}</h2></template>
+                    <el-table-column v-if="format" label="Format" show-overflow-tooltip width="200">
+                        <template slot-scope="scope">
+                            <h2>
+                                {{ scope.row.type + (scope.row.fixed ? "" : "..") + scope.row.length +
+                            (scope.row.format ? "(" + scope.row.format + ")" : "")
+                                }}</h2>
+                        </template>
                     </el-table-column>
-                    <el-table-column
-                            label="Request Value"
-                            :render-header="renderRequestHeader"
-                    >
+                    <el-table-column label="Request Value" :render-header="renderRequestHeader">
                         <template slot-scope="scope">
                             <el-input width="350" size="large" v-model="request[scope.row.no]"></el-input>
                         </template>
                     </el-table-column>
-                    <el-table-column
-                            label="Response Value" :render-header="renderResponseHeader">
+                    <el-table-column label="Response Value" :render-header="renderResponseHeader">
                         <template slot-scope="scope">
                             <el-input width="350" size="large" readonly v-model="response[scope.row.no]"></el-input>
                         </template>
@@ -149,50 +151,71 @@
                         <el-select v-model="select" style="width: 60%;"
                                    @change="key=>request=key?JSON.parse(JSON.stringify(optionsMap[key])):{}"
                                    placeholder="Select a template">
-                            <el-option
-                                    v-for="item in options"
-                                    :key="item.label"
-                                    :label="item.label"
-                                    :value="item.label">
+                            <el-option v-for="item in options" :key="item.label" :label="item.label"
+                                       :value="item.label">
                             </el-option>
                         </el-select>
                     </el-col>
-                    <el-col :span="8">
-                        <el-button type="primary" style="width: 100%;" v-loading="loading"
-                                   @click="submitForm">
-                            Send
-                        </el-button>
+                    <el-col :span="8" style="text-align: right">
+                        <el-dropdown :loading="loading" style="width: 100%;" split-button type="primary"
+                                     @click="submitForm">
+                            <span>Send</span>
+                            <el-dropdown-menu slot="dropdown">
+                                <el-dropdown-item>
+                                    <el-button type="text" size="small" icon="el-icon-delete"
+                                               style="width: 100%;"
+                                               title="Clear transactions table."
+                                               @click="clearTrans">Clear transactions
+                                    </el-button>
+                                </el-dropdown-item>
+                                <el-dropdown-item>
+                                    <el-button type="text" size="small" icon="el-icon-download"
+                                               style="width: 100%;"
+                                               title="Save request and response as json file."
+                                               @click="saveFile">Save fields as json
+                                    </el-button>
+                                </el-dropdown-item>
+                                <el-dropdown-item>
+                                    <el-upload class="upload-demo" ref="upload" accept=".json" action=''
+                                               :on-change="loadFile" :file-list="fileList"
+                                               :show-file-list="false"
+                                               :auto-upload="false">
+                                        <el-button icon="el-icon-upload2" style="width: 100%;" slot="trigger"
+                                                   title="Load request and response from a json file."
+                                                   size="small" type="text">
+                                            Load from json
+                                        </el-button>
+                                    </el-upload>
+                                </el-dropdown-item>
+                            </el-dropdown-menu>
+                        </el-dropdown>
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
                     <el-col>
                         <div style="width: 150px;"><span title="Hide the empty field rows.">HideEmpty</span>
                             :
-                            <el-switch
-                                    v-model="hide">
+                            <el-switch v-model="hide">
                             </el-switch>
                         </div>
                     </el-col>
                     <el-col>
                         <div style="width: 120px;"><span title="Return a mock response immediately.">Debug</span>:
-                            <el-switch
-                                    v-model="debug">
+                            <el-switch v-model="debug">
                             </el-switch>
                         </div>
 
                     </el-col>
                     <el-col>
                         <div style="width: 120px;"><span title="Show format column.">Format</span>:
-                            <el-switch
-                                    v-model="format">
+                            <el-switch v-model="format">
                             </el-switch>
                         </div>
                     </el-col>
                     <el-col>
                         <div style="width: 120px;"><span
                                 title="Submit the message using WebSocket(async) or Http(sync).">Socket</span> :
-                            <el-switch
-                                    v-model="useSocket">
+                            <el-switch v-model="useSocket">
                             </el-switch>
                         </div>
                     </el-col>
@@ -200,15 +223,8 @@
                 <el-row style="margin-bottom: 15px">
                     Transactions:
                     <br/>
-                    <el-table
-                            ref="singleTable"
-                            :data="transactions"
-                            max-height="250"
-                            border
-                            stripe
-                            style="width: 100%"
-                            highlight-current-row
-                            @current-change="handleCurrentChange">
+                    <el-table ref="singleTable" :data="transactions" max-height="250" border stripe
+                              style="width: 100%" highlight-current-row @current-change="handleCurrentChange">
                         <el-table-column type="expand" width="40">
                             <template slot-scope="props">
                                 <el-form label-position="left" inline class="demo-table-expand">
@@ -221,17 +237,13 @@
                                 </el-form>
                             </template>
                         </el-table-column>
-                        <el-table-column
-                                label="MessageId"
-                                show-overflow-tooltip>
+                        <el-table-column label="MessageId" show-overflow-tooltip>
                             <template slot-scope="scope">{{ scope.row.messageId }}</template>
                         </el-table-column>
-                        <el-table-column
-                                label="Status"
-                                show-overflow-tooltip
-                                width="150">
+                        <el-table-column label="Status" show-overflow-tooltip width="130">
                             <template slot-scope="scope">
-                                <i :class="scope.row.status === 'Pending' ? 'el-icon-loading' : (scope.row.status === 'Done' ?'el-icon-success':'el-icon-error')"></i>
+                                <i
+                                        :class="scope.row.status === 'Pending' ? 'el-icon-loading' : (scope.row.status === 'Done' ?'el-icon-success':'el-icon-error')"></i>
                                 <el-tag
                                         :type="scope.row.status === 'Pending' ? 'warning' : (scope.row.status === 'Done' ?'success':'danger')"
                                         disable-transitions>{{scope.row.status}}
@@ -264,7 +276,6 @@
                         </div>
                     </div>
                 </el-row>
-                {{info}}
             </el-col>
         </el-row>
     </div>
@@ -287,6 +298,91 @@
 
     new Vue({
         methods: {
+            loadCache() {
+                const cachedTransactions = sessionStorage.getItem("TRANS_CACHE")
+                if (cachedTransactions) {
+                    this.transactions = JSON.parse(cachedTransactions)
+                }
+                const cachedTransactionsMap = sessionStorage.getItem("TRANS_MAP_CACHE")
+                if (cachedTransactionsMap) {
+                    this.transactionsMap = JSON.parse(cachedTransactionsMap)
+                }
+            },
+            updateCache() {
+                if (this.transactions) {
+                    sessionStorage.setItem("TRANS_CACHE", JSON.stringify(this.transactions))
+                    sessionStorage.setItem("TRANS_MAP_CACHE", JSON.stringify(this.transactionsMap))
+                }
+            }
+            ,
+            clearTrans() {
+                this.transactions = []
+                this.transactionsMap = {}
+                this.updateCache()
+            },
+            saveFile() {
+                const _self = this
+                const data = {
+                    request: this.request,
+                    response: this.response,
+                }
+                const uri = 'data:application/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(data, null, 2))
+                let link = document.createElement('a')
+                link.href = uri
+                link.download = `template_${_self.formatDate(new Date())}.json`
+                document.body.appendChild(link)
+                link.click()
+            },
+            loadFile(file) {
+                const _self = this
+                _self.fileList = []
+                if (file.name.slice(-5) != '.json') {
+                    this.$message("only support json file.")
+                } else {
+                    let fileReader = new FileReader()
+                    fileReader.onload = async (e) => {
+                        try {
+                            let data = e.target.result + ""
+                            console.log(data)
+                            if (this.isJSON(data)) {
+                                const loaded = JSON.parse(data)
+                                if (loaded.request) {
+                                    _self.request = loaded.request
+                                }
+                                if (loaded.response) {
+                                    _self.response = loaded.response
+                                }
+                                this.$message('load success.')
+                            } else {
+                                this.$message('not a json file.')
+                            }
+                            _self.fileList = []
+                        } catch (err) {
+                            console.log(`load JSON document from file error: ${err.message}`)
+                            this.$message('load error.')
+                            _self.fileList = []
+                        }
+                    }
+                    fileReader.readAsText(file.raw)
+                }
+                return false;
+            },
+            isJSON(str) {
+                if (typeof str == 'string') {
+                    try {
+                        var obj = JSON.parse(str);
+                        if (typeof obj == 'object' && obj) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    } catch (e) {
+                        console.log('error：' + str + '!!!' + e);
+                        return false;
+                    }
+                }
+                console.log('It is not a string!')
+            },
             renderRequestHeader(h, {column, $index}, type) {
                 let that = this;
                 return h(
@@ -308,7 +404,8 @@
                         }, 'Clear')
                     ],
                 )
-            },
+            }
+            ,
             renderResponseHeader(h, {column, $index}, type) {
                 let that = this;
                 return h(
@@ -328,7 +425,8 @@
                         }, 'Clear')
                     ],
                 )
-            },
+            }
+            ,
             generateSocketId() {
                 const cachedSocketId = sessionStorage.getItem("SOCKET_ID")
                 if (cachedSocketId) {
@@ -338,7 +436,8 @@
                     sessionStorage.setItem("SOCKET_ID", socketId)
                     return socketId;
                 }
-            },
+            }
+            ,
             generateUuid() {
                 const s = [];
                 const hexDigits = "0123456789abcdef";
@@ -350,7 +449,8 @@
                 s[8] = s[13] = s[18] = s[23] = "-";
                 const uuid = s.join("");
                 return uuid;
-            },
+            }
+            ,
             createWebSocket: function () {
                 const that = this
                 if (window.socket) {
@@ -376,7 +476,8 @@
                     .build()
                 window.socket.connect()
                 this.socket = window.socket
-            },
+            }
+            ,
             toggleSelection(rows) {
                 if (rows) {
                     rows.forEach(row => {
@@ -385,7 +486,8 @@
                 } else {
                     this.$refs.multipleTable.clearSelection();
                 }
-            },
+            }
+            ,
             chatScrollTop() {
                 setTimeout(() => {
                     //滚动条长度
@@ -399,10 +501,12 @@
                         this.chatScrollTop()
                     }
                 }, 13);
-            },
+            }
+            ,
             handleSelectionChange(val) {
                 this.multipleSelection = val;
-            },
+            }
+            ,
             handleCurrentChange(row) {
                 console.log('handleCurrentChange', row)
                 console.log('row.message', row.message)
@@ -410,9 +514,17 @@
                 this.request = row.message ? JSON.parse(JSON.stringify(row.message)) : {}
                 this.response = row.response ? JSON.parse(JSON.stringify(row.response)) : {}
             },
+            leftPad(str, length, use) {
+                let pad = use || '0';
+                const cnt = length - str.length;
+                for (let i = 0; i < cnt; i++) {
+                    str = pad + str;
+                }
+                return str
+            },
             formatDate: function (date) {
-                const seperator1 = "-";
-                const seperator2 = ":";
+                const separator1 = "-";
+                const separator2 = ":";
                 let month = date.getMonth() + 1;
                 let strDate = date.getDate();
                 if (month >= 1 && month <= 9) {
@@ -421,8 +533,9 @@
                 if (strDate >= 0 && strDate <= 9) {
                     strDate = "0" + strDate;
                 }
-                return date.getFullYear() + seperator1 + month + seperator1 + strDate + " " + date.getHours() + seperator2 + date.getMinutes() + seperator2 + date.getSeconds();
-            },
+                return date.getFullYear() + separator1 + month + separator1 + strDate + " " + this.leftPad(date.getHours(), 2, '0') + separator2 + this.leftPad(date.getMinutes(), 2, '0') + separator2 + this.leftPad(date.getSeconds(), 2, '0');
+            }
+            ,
             validateRequest() {
                 if (!this.request[0]) {
                     this.$message({
@@ -432,7 +545,8 @@
                     return false
                 }
                 return true
-            },
+            }
+            ,
             submitForm() {
                 const that = this;
                 if (!this.validateRequest()) {
@@ -446,13 +560,15 @@
                 } else {
                     that.postRequest()
                 }
-            },
+            }
+            ,
             countDown(messageId) {
                 const that = this
                 setTimeout(() => {
-                    if (that.transactionsMap[messageId].status === 'Pending') {
+                    if (that.transactionsMap[messageId] && that.transactionsMap[messageId].status === 'Pending') {
                         //TODO 冲正
                         that.transactionsMap[messageId].status = "TimedOut"
+                        that.updateCache()
                         console.log(`${messageId} Timed out , reversing.`)
                         that.$message({
                             type: 'error',
@@ -460,16 +576,18 @@
                         })
                     }
                 }, 15 * 1000)
-            },
+            }
+            ,
             handleEvent(evt) {
                 const response = JSON.parse(evt.data)
                 console.log("received:", response)
                 if (response.code == 10002) {
                     console.log("message :", response)
-                    if (this.transactionsMap[response.messageId].status == "Pending") {
+                    if (this.transactionsMap[response.messageId] && this.transactionsMap[response.messageId].status == "Pending") {
                         this.transactionsMap[response.messageId].status = "Done"
                         this.response = response.data.response
                         this.transactionsMap[response.messageId].response = response.data.response
+                        this.updateCache()
                     } else {
                         this.$message({
                             type: 'error',
@@ -484,6 +602,7 @@
                     this.chatScrollTop()
                 } else if (response.code == 10003) {
                     this.transactionsMap[response.messageId].status = "Failed"
+                    this.updateCache()
                     this.$message({
                         type: 'error',
                         message: `message handle error,reason: ${response.reason}!`
@@ -491,7 +610,8 @@
                 } else {
                     console.log('received an unsupported message', response)
                 }
-            },
+            }
+            ,
             sendRequest() {
                 const that = this
                 const messageId = this.generateUuid()
@@ -509,6 +629,7 @@
                     window.socket.send(message)
                     that.transactionsMap[messageId] = message
                     that.transactions.unshift(message)
+                    that.updateCache()
                     that.info.push(JSON.parse(str))
                     that.countDown(messageId)
                 } else {
@@ -517,7 +638,8 @@
                         message: "WebSocket lose connection,send failed!"
                     })
                 }
-            },
+            }
+            ,
             postRequest() {
                 const that = this
                 that.loading = true
@@ -547,7 +669,8 @@
                             message: error.message
                         })
                     })
-            },
+            }
+            ,
             resetForm(formName) {
                 this.$refs[formName].resetFields();
             }
@@ -594,6 +717,7 @@
             return {
                 response: {},
                 request: {},
+                fileList: [],
                 fields: [],
                 info: [],
                 connected: false,
@@ -621,9 +745,11 @@
                     ],
                 }
             }
-        },
+        }
+        ,
         mounted() {
             this.getData()
+            this.loadCache()
             this.socketId = this.generateSocketId();
             this.createWebSocket()
         }

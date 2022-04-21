@@ -50,7 +50,7 @@ public class WebSocketServer {
             addOnlineCount();
         }
         webSocketMap.put(socketId, this);
-        logger.info("connect:" + socketId + ",online:" + getOnlineCount());
+        logger.info("WebSocket connect:" + socketId + ",online:" + getOnlineCount());
         JSONObject notice = new JSONObject();
         notice.put("code", 10000);
         sendMessage(notice.toJSONString());
@@ -63,33 +63,41 @@ public class WebSocketServer {
             webSocketMap.remove(socketId);
             subOnlineCount();
         }
-        logger.info("closed:" + socketId + ", online:" + getOnlineCount());
+        logger.info("WebSocket closed:" + socketId + ", online:" + getOnlineCount());
     }
 
 
     @OnMessage
     public void onMessage(String message, Session session) {
-        logger.info("from:" + socketId + ",message:" + message);
+        logger.info("WebSocket received from:" + socketId + ", message:" + message);
         //save to rds or redis
         try {
             if (StringUtils.isNotBlank(message)) {
                 JSONObject request = JSON.parseObject(message);
                 Integer code = request.getInteger("code");
-                if (code == 10001) {// transaction message
-                    webSocketMessageHandler.handleRequest(socketId, request);
+                if (code == 10000) {
+                    logger.info("WebSocket received welcome message, code:{} message", code, message);
+                    return;
                 }
+                if (code == 10001) {// transaction message
+                    logger.info("WebSocket handling transaction message, code:{} message", code, message);
+                    webSocketMessageHandler.handleRequest(socketId, request);
+                    logger.info("WebSocket handled  transaction message, code:{} message", code, message);
+                    return;
+                }
+                logger.warn("WebSocket received unhandled message, code:{} message", code, message);
             } else {
-                logger.warn("received empty message from socketId:{}", socketId);
+                logger.warn("WebSocket received empty message from socketId:{}", socketId);
             }
         } catch (Exception e) {
-            logger.warn("error on handle " + socketId + " " + message, e);
+            logger.warn("WebSocket Error on handle " + socketId + " " + message, e);
         }
     }
 
 
     @OnError
     public void onError(Session session, Throwable error) {
-        logger.error("error:" + this.socketId + ", reason:" + error.getMessage(), error);
+        logger.error("WebSocket error:" + this.socketId + ", reason:" + error.getMessage(), error);
     }
 
 
@@ -104,12 +112,14 @@ public class WebSocketServer {
     public static void sendMessage(String socketId, String message) {
         try {
             if (webSocketMap.containsKey(socketId)) {
+                logger.info("WebSocket send Message  {}:{}", socketId, message);
                 webSocketMap.get(socketId).sendMessage(message);
+                logger.info("WebSocket send Done     {}:{}", socketId, message);
             } else {
-                logger.error("can not found websocket named {}", socketId);
+                logger.error("Can not found websocket named {}", socketId);
             }
         } catch (Exception e) {
-            logger.error(String.format("error occur when send %s %s", socketId, message), e);
+            logger.error(String.format("WebSocket Error occur when send %s %s", socketId, message), e);
         }
     }
 
