@@ -1,5 +1,8 @@
 package com.alipay.sofa.mq.consumer.listener;
 
+import com.alipay.sofa.common.message.Topics;
+import com.alipay.sofa.common.message.service.ConsumerService;
+import com.alipay.sofa.common.message.service.ConsumerServiceProvider;
 import com.alipay.sofa.mq.consumer.enums.MqConsumerBeanEnum;
 import com.alipay.sofa.mq.consumer.properties.MqConsumerProperties;
 import com.alipay.sofa.mq.consumer.service.MqConsumerService;
@@ -16,8 +19,10 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 默认消息监听器
@@ -31,13 +36,44 @@ public class DefaultConsumerListener extends AbstractConsumerListener implements
     @Autowired
     private MqConsumerProperties mqConsumerProperties;
 
+    @Resource
+    private ConsumerServiceProvider consumerServiceProvider;
+
+//    Try this @重阳
+//    @Override
+//    public ConsumeConcurrentlyStatus onMessage(List<MessageExt> msgs) {
+//        for (MessageExt msg : msgs) {
+//            LOGGER.info("Handling message :{}", msg);
+//            String topic = msg.getTopic();
+//            try {
+//                ConsumerService consumerService = consumerServiceProvider.getService(Topics.valueOf(topic));
+//                if (Objects.isNull(consumerService)) {
+//                    LOGGER.error("Not found ConsumerService for {} ,msg:{}", topic, msg);
+//                    // FIXME may be dead loop
+//                    return ConsumeConcurrentlyStatus.RECONSUME_LATER;
+//                }
+//                String message = new String(msg.getBody());
+//                consumerService.beforeHandler(message);
+//                ConsumeConcurrentlyStatus concurrentlyStatus = consumerService.handle(message);
+//                consumerService.afterHandler(message, new Date(), concurrentlyStatus);
+//            } catch (Exception e) {
+//                LOGGER.error("消息消费异常， msg:{}, e:{}", msg, e);
+//                // FIXME may be dead loop
+//                return ConsumeConcurrentlyStatus.RECONSUME_LATER;
+//            }
+//            LOGGER.info("Handled message :{}", msg);
+//        }
+//        return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
+//    }
+
     /**
      * 消息处理
      */
     @Override
     public ConsumeConcurrentlyStatus onMessage(List<MessageExt> msgs) {
-        for (MessageExt msg: msgs) {
-            String topicTag = msg.getTopic() + ":" + msg.getTags();
+        for (MessageExt msg : msgs) {
+            String topicTag = msg.getTopic();
+
             MqConsumerBeanEnum mqConsumerBeanEnum = MqConsumerBeanEnum.getBeanByTopicTag(topicTag);
             if (null == mqConsumerBeanEnum) {
                 break;
@@ -80,7 +116,7 @@ public class DefaultConsumerListener extends AbstractConsumerListener implements
         try {
             super.listener("RESPONSE_QUEUE", mqConsumerProperties.getTags());
         } catch (MQClientException e) {
-            LOGGER.error("consumer error",e);
+            LOGGER.error("consumer error", e);
         }
     }
 }
