@@ -38,7 +38,7 @@ public class MqProducerServiceImpl implements MqProducerService {
         SendResult sendResult;
         try {
             Message message = new Message("REQUEST_QUEUE", mqProducerProperties.getTags(), msg.getBytes(RemotingHelper.DEFAULT_CHARSET));
-            sendResult = defaultMQProducer.send(message);
+            sendResult = defaultMQProducer.send(message,10000);
         } catch (Exception e) {
             LOGGER.error("消息发送失败, msg:{}, cause:{}", msg, e);
             return false;
