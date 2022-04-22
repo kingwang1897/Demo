@@ -8,14 +8,8 @@
     <meta http-equiv="Pragma" content="no-cache"/>
     <meta http-equiv="Expires" content="0"/>
     <link rel="shortcut icon" href="/favicon.ico"/>
-
     <style>
         @import url('lib/element-ui/theme-chalk/index.css');
-
-        body {
-            width: 98%;
-            margin: 10px auto;
-        }
 
         h1 {
             color: #333;
@@ -67,8 +61,8 @@
         .socket-status-container {
             z-index: 100;
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 25px;
+            right: 25px;
             width: 20px;
             height: 20px;
         }
@@ -84,6 +78,100 @@
         .el-icon-arrow-down {
             font-size: 12px;
         }
+
+        .vue-draggable-handle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 0;
+            left: 0;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'><circle cx='5' cy='5' r='5' fill='#999999'/></svg>") no-repeat;
+            background-position: bottom right;
+            padding: 0 8px 8px 0;
+            background-repeat: no-repeat;
+            background-origin: content-box;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        /*.vue-grid-layout {*/
+        /*    background: #eee;*/
+        /*}*/
+        .vue-grid-item-container {
+            width: 100%;
+            height: 100%;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .vue-grid-item:not(.vue-grid-placeholder) {
+            /*background: #ccc;*/
+            border: 1px solid lightgray;
+        }
+
+        .vue-grid-item .resizing {
+            opacity: 0.3;
+        }
+
+        .vue-grid-item .static {
+            background: #cce;
+        }
+
+        .vue-grid-item .text {
+            font-size: 24px;
+            text-align: center;
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            height: 100%;
+            width: 100%;
+        }
+
+        .vue-grid-item .no-drag {
+            height: 100%;
+            width: 100%;
+        }
+
+        .vue-grid-item .minMax {
+            font-size: 12px;
+        }
+
+        .vue-grid-item .add {
+            cursor: pointer;
+        }
+
+        .vue-draggable-handle {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 0;
+            left: 0;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'><circle cx='5' cy='5' r='5' fill='#999999'/></svg>") no-repeat;
+            background-position: bottom right;
+            padding: 0 8px 8px 0;
+            background-repeat: no-repeat;
+            background-origin: content-box;
+            box-sizing: border-box;
+            cursor: pointer;
+        }
+
+        .grid-draggable-handle {
+            width: 100%;
+            height: 30px;
+            color: #303133;
+            background: lightgray;
+            cursor: grab;
+            box-sizing: border-box;
+        }
+
+        .toobar .label {
+            color: #8c939d;
+            font-size: 16px;
+        }
+
     </style>
 </head>
 
@@ -95,189 +183,253 @@
             <div class="socket-status" :style="{'background': connected ? '#13ce66' : '#dd6161'}"></div>
         </el-tooltip>
     </div>
-
-
-    <div style="min-height: 72vh;">
-        <el-row>
-            <el-col :span="5">
-                <h1>R&D Message Test</h1>
-            </el-col>
-            <el-col :span="3">
-                <p style="line-height: 40px">ISO8583 CUPS</p>
-            </el-col>
-        </el-row>
-
-        <el-row style="margin-top:10px;margin-bottom: 20px">
-            <el-col :span="16">
-                <el-table ref="multipleTable"
-                          :data="fields.filter(data =>  !hide || request[data.no] || response[data.no])"
-                          tooltip-effect="dark" border stripe style="width: 100%"
-                          @selection-change="handleSelectionChange">
-                    <el-table-column type="selection" width="40">
-                    </el-table-column>
-                    <el-table-column label="Field" width="100">
-                        <template slot-scope="scope">
-                            <h2>{{ scope.row.no }}</h2>
-                        </template>
-                    </el-table-column>
-                    <el-table-column prop="desc" label="Desc" show-overflow-tooltip>
-                        <template slot-scope="scope">
-                            <h2>{{ scope.row.desc }}</h2>
-                        </template>
-                    </el-table-column>
-                    <el-table-column v-if="format" label="Format" show-overflow-tooltip width="200">
-                        <template slot-scope="scope">
-                            <h2>
-                                {{ scope.row.type + (scope.row.fixed ? "" : "..") + scope.row.length +
-                            (scope.row.format ? "(" + scope.row.format + ")" : "")
-                                }}</h2>
-                        </template>
-                    </el-table-column>
-                    <el-table-column label="Request Value" :render-header="renderRequestHeader">
-                        <template slot-scope="scope">
-                            <el-input width="350" size="large" v-model="request[scope.row.no]"></el-input>
-                        </template>
-                    </el-table-column>
-                    <el-table-column label="Response Value" :render-header="renderResponseHeader">
-                        <template slot-scope="scope">
-                            <el-input width="350" size="large" readonly v-model="response[scope.row.no]"></el-input>
-                        </template>
-                    </el-table-column>
-                </el-table>
-            </el-col>
-            <el-col :span="8">
-                <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
-                    <el-col :span="14"> Templates:
-                        <el-select v-model="select" style="width: 60%;"
-                                   @change="key=>request=key?JSON.parse(JSON.stringify(optionsMap[key])):{}"
-                                   placeholder="Select a template">
-                            <el-option v-for="item in options" :key="item.label" :label="item.label"
-                                       :value="item.label">
-                            </el-option>
-                        </el-select>
-                    </el-col>
-                    <el-col :span="8" style="text-align: right">
-                        <el-dropdown :loading="loading" style="width: 100%;" split-button type="primary"
-                                     @click="submitForm">
-                            <span>Send</span>
-                            <el-dropdown-menu slot="dropdown">
-                                <el-dropdown-item>
-                                    <el-button type="text" size="small" icon="el-icon-delete"
-                                               style="width: 100%;"
-                                               title="Clear transactions table."
-                                               @click="clearTrans">Clear transactions
-                                    </el-button>
-                                </el-dropdown-item>
-                                <el-dropdown-item>
-                                    <el-button type="text" size="small" icon="el-icon-download"
-                                               style="width: 100%;"
-                                               title="Save request and response as json file."
-                                               @click="saveFile">Save fields as json
-                                    </el-button>
-                                </el-dropdown-item>
-                                <el-dropdown-item>
-                                    <el-upload class="upload-demo" ref="upload" accept=".json" action=''
-                                               :on-change="loadFile" :file-list="fileList"
-                                               :show-file-list="false"
-                                               :auto-upload="false">
-                                        <el-button icon="el-icon-upload2" style="width: 100%;" slot="trigger"
-                                                   title="Load request and response from a json file."
-                                                   size="small" type="text">
-                                            Load from json
-                                        </el-button>
-                                    </el-upload>
-                                </el-dropdown-item>
-                            </el-dropdown-menu>
-                        </el-dropdown>
-                    </el-col>
+    <div style="width:100%;margin-top: 10px;height:100%;">
+        <grid-layout :layout.sync="layout"
+                     :col-num="12"
+                     :row-height="30"
+                     :is-draggable="draggable"
+                     :is-resizable="resizable"
+                     :responsive="responsive"
+                     :vertical-compact="true"
+                     :use-css-transforms="true"
+        >
+            <!--            header-->
+            <grid-item
+                    static="true"
+                    :x="layout[0].x"
+                    :y="layout[0].y"
+                    :w="layout[0].w"
+                    :h="layout[0].h"
+                    :i="layout[0].i"
+            >
+                <el-row style="width:100%;">
+                    <div style="width: 320px;float: left;">
+                        <h1>R&D Message Test</h1>
+                    </div>
+                    <div style="width: 100px;line-height: 75px;float: left;">
+                        <p>ISO8583 CUPS</p>
+                    </div>
                 </el-row>
-                <el-row style="margin-bottom: 15px" type="flex" justify="space-between">
-                    <el-col>
-                        <div style="width: 150px;"><span title="Hide the empty field rows.">HideEmpty</span>
-                            :
-                            <el-switch v-model="hide">
-                            </el-switch>
-                        </div>
-                    </el-col>
-                    <el-col>
-                        <div style="width: 120px;"><span title="Return a mock response immediately.">Debug</span>:
-                            <el-switch v-model="debug">
-                            </el-switch>
-                        </div>
-
-                    </el-col>
-                    <el-col>
-                        <div style="width: 120px;"><span title="Show format column.">Format</span>:
-                            <el-switch v-model="format">
-                            </el-switch>
-                        </div>
-                    </el-col>
-                    <el-col>
-                        <div style="width: 120px;"><span
-                                title="Submit the message using WebSocket(async) or Http(sync).">Socket</span> :
-                            <el-switch v-model="useSocket">
-                            </el-switch>
-                        </div>
-                    </el-col>
-                </el-row>
-                <el-row style="margin-bottom: 15px">
-                    Transactions:
-                    <br/>
-                    <el-table ref="singleTable" :data="transactions" max-height="250" border stripe
-                              style="width: 100%" highlight-current-row @current-change="handleCurrentChange">
-                        <el-table-column type="expand" width="40">
-                            <template slot-scope="props">
-                                <el-form label-position="left" inline class="demo-table-expand">
-                                    <el-form-item label="MessageId">
-                                        <span>{{ props.row.messageId }}</span>
-                                    </el-form-item>
-                                    <el-form-item label="Status">
-                                        <span>{{ props.row.status }}</span>
-                                    </el-form-item>
-                                </el-form>
+            </grid-item>
+            <!--            message table-->
+            <grid-item
+                    :x="layout[1].x"
+                    :y="layout[1].y"
+                    :w="layout[1].w"
+                    :h="layout[1].h"
+                    :i="layout[1].i"
+            >
+                <div class="vue-grid-item-container">
+                    <div class="grid-draggable-handle">
+                        Message
+                    </div>
+                    <el-table ref="multipleTable"
+                              :data="fields.filter(data =>  !hide || request[data.no] || response[data.no])"
+                              tooltip-effect="dark" border stripe style="width: 100%"
+                              @selection-change="handleSelectionChange">
+                        <el-table-column type="selection" width="40">
+                        </el-table-column>
+                        <el-table-column label="Field" width="100">
+                            <template slot-scope="scope">
+                                <h2>{{ scope.row.no }}</h2>
                             </template>
                         </el-table-column>
-                        <el-table-column label="MessageId" show-overflow-tooltip>
-                            <template slot-scope="scope">{{ scope.row.messageId }}</template>
-                        </el-table-column>
-                        <el-table-column label="Status" show-overflow-tooltip width="130">
+                        <el-table-column prop="desc" label="Desc" show-overflow-tooltip>
                             <template slot-scope="scope">
-                                <i
-                                        :class="scope.row.status === 'Pending' ? 'el-icon-loading' : (scope.row.status === 'Done' ?'el-icon-success':'el-icon-error')"></i>
-                                <el-tag
-                                        :type="scope.row.status === 'Pending' ? 'warning' : (scope.row.status === 'Done' ?'success':'danger')"
-                                        disable-transitions>{{scope.row.status}}
-                                </el-tag>
+                                <h2>{{ scope.row.desc }}</h2>
+                            </template>
+                        </el-table-column>
+                        <el-table-column v-if="format" label="Format" show-overflow-tooltip width="200">
+                            <template slot-scope="scope">
+                                <h2>
+                                    {{ scope.row.type + (scope.row.fixed ? "" : "..") + scope.row.length +
+                                (scope.row.format ? "(" + scope.row.format + ")" : "")
+                                    }}</h2>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="Request Value" :render-header="renderRequestHeader">
+                            <template slot-scope="scope">
+                                <el-input width="350" size="large" v-model="request[scope.row.no]"></el-input>
+                            </template>
+                        </el-table-column>
+                        <el-table-column label="Response Value" :render-header="renderResponseHeader">
+                            <template slot-scope="scope">
+                                <el-input width="350" size="large" readonly v-model="response[scope.row.no]"></el-input>
                             </template>
                         </el-table-column>
                     </el-table>
-                </el-row>
-                <el-row style="margin-bottom: 2px">
-                    Console:
-                    <br/>
-                    <div style="border: 1px solid gray;width: 100%;height: 600px;text-align: left;overflow-x: auto !important;overflow-y: auto !important"
-                         ref="chatScroll">
-                        <div v-for="(v,k) in info" style="text-align: left">
-                            <div style="text-align: left">
-                                <span class="log">[{{v.time}}][{{v.type}}][seq:{{k}}]</span>
+                </div>
+            </grid-item>
+            <!--            Toolbar-->
+            <grid-item
+                    :x="layout[2].x"
+                    :y="layout[2].y"
+                    :w="layout[2].w"
+                    :h="layout[2].h"
+                    :i="layout[2].i"
+            >
+                <div class="vue-grid-item-container toobar">
+                    <div class="grid-draggable-handle">
+                        Toolbar
+                    </div>
+                    <el-row style="width: 100%;padding-top: 2px;padding-right: 2px" type="flex" justify="space-between">
+                        <el-col :span="14"><span class="label">Templates:</span>
+                            <el-select v-model="select" style="width: 60%;"
+                                       @change="key=>request=key?JSON.parse(JSON.stringify(optionsMap[key])):{}"
+                                       placeholder="Select a template">
+                                <el-option v-for="item in options" :key="item.label" :label="item.label"
+                                           :value="item.label">
+                                </el-option>
+                            </el-select>
+                        </el-col>
+                        <el-col :span="8" style="text-align: right">
+                            <el-dropdown :loading="loading" style="width: 100%;" split-button type="primary"
+                                         @click="submitForm">
+                                Send
+                                <el-dropdown-menu slot="dropdown">
+                                    <el-dropdown-item>
+                                        <el-button type="text" size="small" icon="el-icon-delete"
+                                                   style="width: 100%;"
+                                                   title="Clear transactions table."
+                                                   @click="clearTrans">Clear transactions
+                                        </el-button>
+                                    </el-dropdown-item>
+                                    <el-dropdown-item>
+                                        <el-button type="text" size="small" icon="el-icon-download"
+                                                   style="width: 100%;"
+                                                   title="Save request and response as json file."
+                                                   @click="saveFile">Save fields as json
+                                        </el-button>
+                                    </el-dropdown-item>
+                                    <el-dropdown-item>
+                                        <el-upload class="upload-demo" ref="upload" accept=".json" action=''
+                                                   :on-change="loadFile" :file-list="fileList"
+                                                   :show-file-list="false"
+                                                   :auto-upload="false">
+                                            <el-button icon="el-icon-upload2" style="width: 100%;" slot="trigger"
+                                                       title="Load request and response from a json file."
+                                                       size="small" type="text">
+                                                Load from json
+                                            </el-button>
+                                        </el-upload>
+                                    </el-dropdown-item>
+                                </el-dropdown-menu>
+                            </el-dropdown>
+                        </el-col>
+                    </el-row>
+                    <el-row style="width: 100%;padding-top:5px;padding-right: 2px" type="flex" justify="space-between">
+                        <el-col :span="8">
+                            <span class="label" title="Hide the empty field rows.">HideEmpty</span>
+                            :
+                            <el-switch v-model="hide">
+                            </el-switch>
+                        </el-col>
+                        <el-col :span="6">
+                            <div style="width: 100%;"><span class="label" title="Return a mock response immediately.">Debug</span>:
+                                <el-switch v-model="debug">
+                                </el-switch>
                             </div>
-                            <pre v-if="v.type==='send'">{{JSON.stringify(v.message, null, 2)}}</pre>
-                            <div v-else>
-                                <pre> <span class="log">request:</span><br/>{{JSON.stringify(v.message.request, null, 2)}}</pre>
-                                <pre> <span class="log">requestHex:</span><br/>{{ v.message.requestHex }}</pre>
-                                <pre> <span
-                                        class="log">request.info:</span><br/>{{v.message.requestInfo && v.message.requestInfo.trim()}}</pre>
-                                <pre> <span
-                                        class="log">response:</span><br/>{{JSON.stringify(v.message.response, null, 2)}}</pre>
-                                <pre> <span class="log">responseHex:</span><br/>{{ v.message.responseHex }}</pre>
-                                <pre> <span
-                                        class="log">response.info:</span><br/>{{v.message.responseInfo && v.message.responseInfo.trim()}}</pre>
+                        </el-col>
+                        <el-col :span="6">
+                            <div style="width: 100%;"><span class="label" title="Show format column.">Format</span>:
+                                <el-switch v-model="format">
+                                </el-switch>
+                            </div>
+                        </el-col>
+                        <el-col :span="6" style="text-align: right">
+                            <div style="width: 100%;"><span class="label"
+                                                            title="Submit the message using WebSocket(async) or Http(sync).">Socket</span>
+                                :
+                                <el-switch v-model="useSocket">
+                                </el-switch>
+                            </div>
+                        </el-col>
+                    </el-row>
+                </div>
+
+            </grid-item>
+            <!--            Transactions-->
+            <grid-item
+                    :x="layout[3].x"
+                    :y="layout[3].y"
+                    :w="layout[3].w"
+                    :h="layout[3].h"
+                    :i="layout[3].i"
+            >
+                <div class="vue-grid-item-container">
+
+                    <el-row style="width: 100%;height: 100%;">
+                        <div class="grid-draggable-handle">
+                            Transactions
+                        </div>
+                        <el-table ref="singleTable" :data="transactions" border stripe
+                                  style="width: 100%" highlight-current-row @current-change="handleCurrentChange">
+                            <el-table-column type="expand" width="40">
+                                <template slot-scope="props">
+                                    <el-form label-position="left" inline class="demo-table-expand">
+                                        <el-form-item label="MessageId">
+                                            <span>{{ props.row.messageId }}</span>
+                                        </el-form-item>
+                                        <el-form-item label="Status">
+                                            <span>{{ props.row.status }}</span>
+                                        </el-form-item>
+                                    </el-form>
+                                </template>
+                            </el-table-column>
+                            <el-table-column label="MessageId" show-overflow-tooltip>
+                                <template slot-scope="scope">{{ scope.row.messageId }}</template>
+                            </el-table-column>
+                            <el-table-column label="Status" show-overflow-tooltip width="130">
+                                <template slot-scope="scope">
+                                    <i
+                                            :class="scope.row.status === 'Pending' ? 'el-icon-loading' : (scope.row.status === 'Done' ?'el-icon-success':'el-icon-error')"></i>
+                                    <el-tag
+                                            :type="scope.row.status === 'Pending' ? 'warning' : (scope.row.status === 'Done' ?'success':'danger')"
+                                            disable-transitions>{{scope.row.status}}
+                                    </el-tag>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                    </el-row>
+                </div>
+            </grid-item>
+            <!--            Console-->
+            <grid-item
+                    :x="layout[4].x"
+                    :y="layout[4].y"
+                    :w="layout[4].w"
+                    :h="layout[4].h"
+                    :i="layout[4].i"
+            >
+                <div class="vue-grid-item-container" ref="consoleScroll">
+                    <el-row style="margin-bottom: 2px">
+                        <div class="grid-draggable-handle">
+                            Console
+                        </div>
+                        <div style="width: 100%;max-height: 100%;text-align: left;overflow-x: auto;overflow-y: auto">
+                            <div v-for="(v,k) in info" style="text-align: left;width: 100%;height: 100%;">
+                                <div style="text-align: left">
+                                    <span class="log">[{{v.time}}][{{v.type}}][seq:{{k}}]</span>
+                                </div>
+                                <pre v-if="v.type==='send'">{{JSON.stringify(v.message, null, 2)}}</pre>
+                                <div v-else>
+                                    <pre> <span
+                                            class="log">request:</span><br/>{{JSON.stringify(v.message.request, null, 2)}}</pre>
+                                    <pre> <span class="log">requestHex:</span><br/>{{ v.message.requestHex }}</pre>
+                                    <pre> <span
+                                            class="log">request.info:</span><br/>{{v.message.requestInfo && v.message.requestInfo.trim()}}</pre>
+                                    <pre> <span
+                                            class="log">response:</span><br/>{{JSON.stringify(v.message.response, null, 2)}}</pre>
+                                    <pre> <span class="log">responseHex:</span><br/>{{ v.message.responseHex }}</pre>
+                                    <pre> <span
+                                            class="log">response.info:</span><br/>{{v.message.responseInfo && v.message.responseInfo.trim()}}</pre>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </el-row>
-            </el-col>
-        </el-row>
+                    </el-row>
+                </div>
+            </grid-item>
+        </grid-layout>
     </div>
 </div>
 </body>
@@ -285,6 +437,7 @@
 <script src="lib/element-ui/index.js"></script>
 <script src="lib/axios.min.js"></script>
 <script src="lib/websocket-builder.js"></script>
+<script src="lib/vue-grid-layout.umd.js"></script>
 <script>
     function groupBy(list, fn) {
         const groups = {}
@@ -313,8 +466,7 @@
                     sessionStorage.setItem("TRANS_CACHE", JSON.stringify(this.transactions))
                     sessionStorage.setItem("TRANS_MAP_CACHE", JSON.stringify(this.transactionsMap))
                 }
-            }
-            ,
+            },
             clearTrans() {
                 this.transactions = []
                 this.transactionsMap = {}
@@ -404,8 +556,7 @@
                         }, 'Clear')
                     ],
                 )
-            }
-            ,
+            },
             renderResponseHeader(h, {column, $index}, type) {
                 let that = this;
                 return h(
@@ -425,8 +576,7 @@
                         }, 'Clear')
                     ],
                 )
-            }
-            ,
+            },
             generateSocketId() {
                 const cachedSocketId = sessionStorage.getItem("SOCKET_ID")
                 if (cachedSocketId) {
@@ -436,8 +586,7 @@
                     sessionStorage.setItem("SOCKET_ID", socketId)
                     return socketId;
                 }
-            }
-            ,
+            },
             generateUuid() {
                 const s = [];
                 const hexDigits = "0123456789abcdef";
@@ -449,8 +598,7 @@
                 s[8] = s[13] = s[18] = s[23] = "-";
                 const uuid = s.join("");
                 return uuid;
-            }
-            ,
+            },
             createWebSocket: function () {
                 const that = this
                 if (window.socket) {
@@ -476,8 +624,7 @@
                     .build()
                 window.socket.connect()
                 this.socket = window.socket
-            }
-            ,
+            },
             toggleSelection(rows) {
                 if (rows) {
                     rows.forEach(row => {
@@ -486,19 +633,18 @@
                 } else {
                     this.$refs.multipleTable.clearSelection();
                 }
-            }
-            ,
-            chatScrollTop() {
+            },
+            consoleScrollTop() {
                 setTimeout(() => {
                     //滚动条长度
-                    const currentDistance = this.$refs.chatScroll.scrollHeight - this.$refs.chatScroll.clientHeight;
+                    const currentDistance = this.$refs.consoleScroll.scrollHeight - this.$refs.consoleScroll.clientHeight;
                     //当前滚动条距离顶部的距离
-                    let currentScroll_y = this.$refs.chatScroll.scrollTop;
+                    let currentScroll_y = this.$refs.consoleScroll.scrollTop;
                     if (currentDistance > 0 && currentDistance - currentScroll_y > 10) {
                         currentScroll_y = Math.ceil((currentDistance - currentScroll_y) / 10) + currentScroll_y;
                         currentScroll_y = currentScroll_y > currentDistance ? currentDistance : currentScroll_y;
-                        this.$refs.chatScroll.scrollTop = currentScroll_y;
-                        this.chatScrollTop()
+                        this.$refs.consoleScroll.scrollTop = currentScroll_y;
+                        this.consoleScrollTop()
                     }
                 }, 13);
             }
@@ -553,7 +699,7 @@
                     return
                 }
                 // that.loading = true
-                that.chatScrollTop()
+                that.consoleScrollTop()
                 that.response = {}
                 if (this.useSocket) {
                     that.sendRequest()
@@ -599,7 +745,7 @@
                         time: this.formatDate(new Date()),
                         message: response.data
                     })
-                    this.chatScrollTop()
+                    this.consoleScrollTop()
                 } else if (response.code == 10003) {
                     this.transactionsMap[response.messageId].status = "Failed"
                     this.updateCache()
@@ -657,7 +803,7 @@
                             time: that.formatDate(new Date()),
                             message: response.data
                         })
-                        that.chatScrollTop()
+                        that.consoleScrollTop()
                         // TODO For debug ,need replace response
                         that.response = response.data.request
                     })
@@ -715,6 +861,17 @@
                 }
             };
             return {
+                layout: [
+                    {"x": 0, "y": 0, "w": 12, "h": 2, "i": "0"},
+                    {"x": 0, "y": 9, "w": 8, "h": 16, "i": "1"},
+                    {"x": 9, "y": 9, "w": 4, "h": 3, "i": "2"},
+                    {"x": 9, "y": 9, "w": 4, "h": 7, "i": "3"},
+                    {"x": 9, "y": 9, "w": 4, "h": 6, "i": "4"}
+                ],
+                draggable: true,
+                resizable: true,
+                responsive: true,
+                index: 0,
                 response: {},
                 request: {},
                 fileList: [],
