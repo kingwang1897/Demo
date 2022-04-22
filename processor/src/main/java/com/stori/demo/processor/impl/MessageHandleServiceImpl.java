@@ -69,7 +69,7 @@ public class MessageHandleServiceImpl implements MessageHandleService {
         MessageHandle messageHandle = new MessageHandle(messageResult.getType());
         Map<Integer, String> messageFileds = new HashMap<>();
         messageHandle.setMessageFileds(messageFileds);
-        messageFileds.put(39, "00");
+        messageFileds.put(Constant.MESSAGE_RESPONSE_ID, Constant.MESSAGE_RESULT_SUCCESS);
         return HelpResult.ok(messageHandle);
     }
 
@@ -78,8 +78,8 @@ public class MessageHandleServiceImpl implements MessageHandleService {
         MessageHandle messageHandle = new MessageHandle(messageResult.getType());
         Map<Integer, String> messageFileds = new HashMap<>();
         messageHandle.setMessageFileds(messageFileds);
-        messageFileds.put(38, "123456");
-        messageFileds.put(39, "00");
+        messageFileds.put(Constant.MESSAGE_RESPONSE_ID, Constant.MESSAGE_RESULT_SUCCESS);
+        messageFileds.put(Constant.MESSAGE_RESPONSE_AUTH_ID, Constant.MESSAGE_RESPONSE_AUTH_SUCCESS);
         return HelpResult.ok(messageHandle);
     }
 }

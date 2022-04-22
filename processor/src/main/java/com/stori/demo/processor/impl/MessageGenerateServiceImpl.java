@@ -48,7 +48,7 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
             m.setForceSecondaryBitmap(true);
 
             Map<Integer, String> messageFileds;
-            for (int i = 2; i <= 128; i++) {
+            for (int i = Constant.MESSAGE_FIELD_MIN; i <= Constant.MESSAGE_FIELD_MAX; i++) {
                 if (m.hasField(i)) {
                     if (!m.getField(i).isNeedUpdate()) {
                         m.setValue(i, messageLifecycle.getMessageResult().getMessageFileds().get(i), m.getField(i).getType(), m.getField(i).getLength());

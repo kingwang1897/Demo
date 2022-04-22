@@ -119,7 +119,7 @@ public class MessageParseServiceImpl implements MessageParseService {
     private MessageResult parseMsgByConfig(String msg, int headerLength) {
         try {
             MessageFactory messageFactory = ConfigParser.createFromClasspathConfig("j8583-templates-request.xml");
-            messageFactory.setCharacterEncoding("gbk");
+            messageFactory.setCharacterEncoding(Constant.MESSAGE_ENCODING);
             messageFactory.setForceStringEncoding(true);
 
             //解析报文
