@@ -103,9 +103,11 @@ public class WebSocketServer {
 
     private void sendMessage(String message) {
         try {
-            this.session.getBasicRemote().sendText(message);
+            synchronized (this.session) {
+                this.session.getBasicRemote().sendText(message);
+            }
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error(String.format("WebSocket Error occur when send %s %s", socketId, message), e);
         }
     }
 

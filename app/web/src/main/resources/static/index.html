@@ -79,20 +79,46 @@
             font-size: 12px;
         }
 
+        .vue-grid-item .vue-grid-placeholder {
+            background: rgb(101, 139, 182) !important;
+            opacity: 0.2;
+            transition-duration: 100ms;
+            z-index: 2;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -o-user-select: none;
+            user-select: none;
+        }
+
+        .vue-grid-item > .vue-resizable-handle {
+            position: absolute !important;
+            width: 30px !important;
+            height: 30px !important;
+            bottom: 0px !important;
+            right: 0px !important;
+            padding: 0 3px 3px 0 !important;
+            background: url('lib/image/resize-handle.svg') no-repeat 100% 100% !important;
+            background-origin: content-box !important;
+            -webkit-box-sizing: border-box !important;
+            box-sizing: border-box !important;
+            cursor: se-resize !important;
+            z-index: 100;
+        }
+
         .vue-draggable-handle {
             position: absolute;
             width: 20px;
             height: 20px;
             top: 0;
             left: 0;
-            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'><circle cx='5' cy='5' r='5' fill='#999999'/></svg>") no-repeat;
-            background-position: bottom right;
             padding: 0 8px 8px 0;
-            background-repeat: no-repeat;
+            background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10'><circle cx='5' cy='5' r='5' fill='#999999'/></svg>") no-repeat bottom right;
             background-origin: content-box;
             box-sizing: border-box;
             cursor: pointer;
         }
+
 
         /*.vue-grid-layout {*/
         /*    background: #eee;*/
@@ -102,6 +128,25 @@
             height: 100%;
             overflow-x: auto;
             overflow-y: auto;
+        }
+
+        .vue-grid-item-container::-webkit-scrollbar {
+            width: 5px;
+            height: 98%
+        }
+
+        .vue-grid-item-container::-webkit-scrollbar-thumb {
+            border-radius: 10px;
+            -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.2);
+            cursor: grab;
+        }
+
+        .vue-grid-item-container::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+            border-radius: 0;
+            background: rgba(0, 0, 0, 0.1);
+            cursor: pointer;
         }
 
         .vue-grid-item:not(.vue-grid-placeholder) {
@@ -195,7 +240,7 @@
         >
             <!--            header-->
             <grid-item
-                    static="true"
+                    :static="true"
                     :x="layout[0].x"
                     :y="layout[0].y"
                     :w="layout[0].w"
@@ -366,12 +411,21 @@
                                   style="width: 100%" highlight-current-row @current-change="handleCurrentChange">
                             <el-table-column type="expand" width="40">
                                 <template slot-scope="props">
-                                    <el-form label-position="left" inline class="demo-table-expand">
+                                    <el-form label-position="left" style="width: 100%;" inline label-width="100px">
                                         <el-form-item label="MessageId">
                                             <span>{{ props.row.messageId }}</span>
                                         </el-form-item>
-                                        <el-form-item label="Status">
+                                        <el-form-item label="Status" style="width: 100%;">
                                             <span>{{ props.row.status }}</span>
+                                        </el-form-item>
+                                        <el-form-item v-if="props.row.sendtime" label="SendTime">
+                                            <span>{{ formatDate(new Date(props.row.sendtime))}}</span>
+                                        </el-form-item>
+                                        <el-form-item v-if="props.row.endtime" label="FinishTime">
+                                            <span>{{ formatDate(new Date(props.row.endtime))}}</span>
+                                        </el-form-item>
+                                        <el-form-item v-if="props.row.endtime" label="ElapsedTime">
+                                            <span>{{ formatTime(props.row.endtime - props.row.sendtime)}}</span>
                                         </el-form-item>
                                     </el-form>
                                 </template>
@@ -384,6 +438,7 @@
                                     <i
                                             :class="scope.row.status === 'Pending' ? 'el-icon-loading' : (scope.row.status === 'Done' ?'el-icon-success':'el-icon-error')"></i>
                                     <el-tag
+                                            :title="scope.row.endtime?formatTime(scope.row.endtime-scope.row.sendtime):''"
                                             :type="scope.row.status === 'Pending' ? 'warning' : (scope.row.status === 'Done' ?'success':'danger')"
                                             disable-transitions>{{scope.row.status}}
                                     </el-tag>
@@ -668,6 +723,13 @@
                 }
                 return str
             },
+            formatTime: function (ms) {
+                if (ms < 1000) {
+                    return ms + ' ms'
+                } else {
+                    return (ms / 1000.00).toFixed(3) + ' s'
+                }
+            },
             formatDate: function (date) {
                 const separator1 = "-";
                 const separator2 = ":";
@@ -679,7 +741,16 @@
                 if (strDate >= 0 && strDate <= 9) {
                     strDate = "0" + strDate;
                 }
-                return date.getFullYear() + separator1 + month + separator1 + strDate + " " + this.leftPad(date.getHours(), 2, '0') + separator2 + this.leftPad(date.getMinutes(), 2, '0') + separator2 + this.leftPad(date.getSeconds(), 2, '0');
+                let t = date.getTime() + "";
+                const ms = t.substring(t.length - 3, t.length)
+                return date.getFullYear() + separator1 + month + separator1 + strDate
+                    + " " + this.leftPad(date.getHours(), 2, '0')
+                    + separator2
+                    + this.leftPad(date.getMinutes(), 2, '0')
+                    + separator2
+                    + this.leftPad(date.getSeconds(), 2, '0')
+                    + "."
+                    + ms;
             }
             ,
             validateRequest() {
@@ -713,7 +784,8 @@
                 setTimeout(() => {
                     if (that.transactionsMap[messageId] && that.transactionsMap[messageId].status === 'Pending') {
                         //TODO 冲正
-                        that.transactionsMap[messageId].status = "TimedOut"
+                        that.transactionsMap[messageId].status = "Timeout"
+                        that.transactionsMap[messageId].endtime = new Date().getTime()
                         that.updateCache()
                         console.log(`${messageId} Timed out , reversing.`)
                         that.$message({
@@ -731,6 +803,7 @@
                     console.log("message :", response)
                     if (this.transactionsMap[response.messageId] && this.transactionsMap[response.messageId].status == "Pending") {
                         this.transactionsMap[response.messageId].status = "Done"
+                        this.transactionsMap[response.messageId].endtime = new Date().getTime()
                         this.response = response.data.response
                         this.transactionsMap[response.messageId].response = response.data.response
                         this.updateCache()
@@ -748,6 +821,7 @@
                     this.consoleScrollTop()
                 } else if (response.code == 10003) {
                     this.transactionsMap[response.messageId].status = "Failed"
+                    this.transactionsMap[response.messageId].endtime = new Date().getTime()
                     this.updateCache()
                     this.$message({
                         type: 'error',
@@ -767,6 +841,7 @@
                     status: "Pending",
                     debug: this.debug,
                     time: this.formatDate(new Date()),
+                    sendtime: new Date().getTime(),
                     messageId: messageId,
                     message: JSON.parse(JSON.stringify(this.request))
                 }
