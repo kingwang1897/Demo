@@ -3,11 +3,11 @@ package com.stori.demo.processor.thread;
 import com.google.common.base.Throwables;
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
+import com.stori.demo.processor.impl.MessageHandleServiceImpl;
+import com.stori.demo.processor.impl.MessageParseServiceImpl;
+import com.stori.demo.processor.impl.MessageResponseServiceImpl;
+import com.stori.demo.processor.impl.MessageSendServiceImpl;
 import com.stori.demo.processor.model.MessageLifecycle;
-import com.stori.demo.processor.service.MessageHandleService;
-import com.stori.demo.processor.service.MessageParseService;
-import com.stori.demo.processor.service.MessageResponeService;
-import com.stori.demo.processor.service.MessageSendService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,22 +18,22 @@ public class MessageProcessThread extends Thread {
 
     private Map<String, MessageLifecycle> concurrentHashMap;
 
-    private MessageParseService messageParseService;
+    private MessageParseServiceImpl messageParseService;
 
-    private MessageHandleService messageHandleService;
+    private MessageHandleServiceImpl messageHandleService;
 
-    private MessageResponeService messageResponeService;
+    private MessageResponseServiceImpl messageResponseService;
 
-    private MessageSendService messageSendService;
+    private MessageSendServiceImpl messageSendService;
 
-    public MessageProcessThread (MessageParseService messageParseService,
-                                 MessageHandleService messageHandleService,
-                                 MessageResponeService messageResponeService,
-                                 MessageSendService messageSendService,
+    public MessageProcessThread (MessageParseServiceImpl messageParseService,
+                                 MessageHandleServiceImpl messageHandleService,
+                                 MessageResponseServiceImpl messageResponseService,
+                                 MessageSendServiceImpl messageSendService,
                                  Map<String, MessageLifecycle> concurrentHashMap) {
         this.messageParseService = messageParseService;
         this.messageHandleService = messageHandleService;
-        this.messageResponeService = messageResponeService;
+        this.messageResponseService = messageResponseService;
         this.messageSendService = messageSendService;
         this.concurrentHashMap = concurrentHashMap;
     }
@@ -54,16 +54,6 @@ public class MessageProcessThread extends Thread {
     }
 
     private void messageProcess(MessageLifecycle messageLifecycle) {
-        // retry more than 3
-        if (messageLifecycle.getCallCount() > Constant.MESSAGE_CALL_RETRY && !messageLifecycle.getStatus().equals(MessageStatus.DONE)
-        && !messageLifecycle.getStatus().equals(MessageStatus.FAILURE)) {
-            logger.error("messageProcess error, cause by: retry more 3 times, status is : {}, messageId is: {}.", messageLifecycle.getStatus().name(), messageLifecycle.getMessageId());
-            // sending fail, update DONE, other update FAILURE.
-            messageLifecycle.setStatus(messageLifecycle.getStatus().equals(MessageStatus.SENDING) ? MessageStatus.DONE : MessageStatus.FAILURE);
-            messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
-            return;
-        }
-
         switch (messageLifecycle.getStatus()) {
             case PREPARSE:
                 messageParseService.execute(messageLifecycle);
@@ -72,7 +62,7 @@ public class MessageProcessThread extends Thread {
                 messageHandleService.execute(messageLifecycle);
                 break;
             case PRERESPONSE:
-                messageResponeService.execute(messageLifecycle);
+                messageResponseService.execute(messageLifecycle);
                 break;
             case PRESEND:
                 messageSendService.execute(messageLifecycle);

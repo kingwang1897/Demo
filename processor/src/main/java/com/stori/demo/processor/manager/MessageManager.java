@@ -2,11 +2,11 @@ package com.stori.demo.processor.manager;
 
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
+import com.stori.demo.processor.impl.MessageHandleServiceImpl;
 import com.stori.demo.processor.impl.MessageParseServiceImpl;
+import com.stori.demo.processor.impl.MessageResponseServiceImpl;
+import com.stori.demo.processor.impl.MessageSendServiceImpl;
 import com.stori.demo.processor.model.MessageLifecycle;
-import com.stori.demo.processor.service.MessageHandleService;
-import com.stori.demo.processor.service.MessageResponeService;
-import com.stori.demo.processor.service.MessageSendService;
 import com.stori.demo.processor.thread.MessageProcessThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,17 +28,17 @@ public class MessageManager {
     private MessageParseServiceImpl messageParseService;
 
     @Autowired
-    private MessageHandleService messageHandleService;
+    private MessageHandleServiceImpl messageHandleService;
 
     @Autowired
-    private MessageResponeService messageResponeService;
+    private MessageResponseServiceImpl messageResponseService;
 
     @Autowired
-    private MessageSendService messageSendService;
+    private MessageSendServiceImpl messageSendService;
 
     public void init() {
         messageProcessThread = new MessageProcessThread(messageParseService,
-                messageHandleService, messageResponeService, messageSendService, concurrentHashMap);
+                messageHandleService, messageResponseService, messageSendService, concurrentHashMap);
         messageProcessThread.start();
     }
 

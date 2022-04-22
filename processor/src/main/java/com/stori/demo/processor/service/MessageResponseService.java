@@ -7,7 +7,7 @@ import com.stori.demo.processor.model.MessageResult;
 /**
  * Message response
  */
-public interface MessageResponeService extends MessageBaseService {
+public interface MessageResponseService {
 
     /**
      * generate by config

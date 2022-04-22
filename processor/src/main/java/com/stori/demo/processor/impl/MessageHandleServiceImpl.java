@@ -2,10 +2,11 @@ package com.stori.demo.processor.impl;
 
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
-import com.stori.demo.processor.model.Result;
 import com.stori.demo.processor.model.MessageHandle;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.MessageResult;
+import com.stori.demo.processor.model.Result;
+import com.stori.demo.processor.service.MessageBaseService;
 import com.stori.demo.processor.service.MessageHandleService;
 import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
@@ -20,7 +21,7 @@ import java.util.Map;
  *
  */
 @Service("messageHandleService")
-public class MessageHandleServiceImpl implements MessageHandleService {
+public class MessageHandleServiceImpl extends MessageBaseService implements MessageHandleService {
     protected final Logger logger = LoggerFactory.getLogger(MessageParseServiceImpl.class);
 
     /**
@@ -31,24 +32,21 @@ public class MessageHandleServiceImpl implements MessageHandleService {
      */
     @Override
     public MessageLifecycle execute(MessageLifecycle messageLifecycle) {
-        if (messageLifecycle.getStatus().equals(MessageStatus.HANDLEING)) {
+        if (!executeStart(messageLifecycle, MessageStatus.HANDLEING)) {
             return messageLifecycle;
         }
-        messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
-        messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-        messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
 
         // step 1: handle messageResult
-        Result<MessageHandle> Result;
+        Result<MessageHandle> result;
         switch (CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType())) {
             case Constant.MESSAGE_TYPE_ID_MANGER:
-                Result = handleForManager(messageLifecycle.getMessageResult());
+                result = handleForManager(messageLifecycle.getMessageResult());
                 break;
             case Constant.MESSAGE_TYPE_ID_USER:
-                Result = handleForUser(messageLifecycle.getMessageResult());
+                result = handleForUser(messageLifecycle.getMessageResult());
                 break;
             case Constant.MESSAGE_TYPE_ID_NOTIFY:
-                Result = handleForNotify(messageLifecycle.getMessageResult());
+                result = handleForNotify(messageLifecycle.getMessageResult());
                 break;
             default:
                 logger.error("messageHandle error, case by: no message type, type is:{}.", CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType()));
@@ -56,16 +54,15 @@ public class MessageHandleServiceImpl implements MessageHandleService {
                 return messageLifecycle;
         }
 
-        // step 2: handle result
-        if (!Result.isSuccess()) {
-            messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-            messageLifecycle.setResult(Result);
+        // step 2: failure result
+        if (!result.isSuccess()) {
+            executeError(messageLifecycle, result);
             return messageLifecycle;
         }
 
-        messageLifecycle.setResult(Result);
-        messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-        messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
+        // step 3: success result
+        messageLifecycle.setResult(result);
+        executeEnd(messageLifecycle, null, result);
         return messageLifecycle;
     }
 

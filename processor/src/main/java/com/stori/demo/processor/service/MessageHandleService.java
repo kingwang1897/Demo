@@ -5,7 +5,7 @@ import com.stori.demo.processor.model.Result;
 import com.stori.demo.processor.model.MessageHandle;
 import com.stori.demo.processor.model.MessageResult;
 
-public interface MessageHandleService extends MessageBaseService {
+public interface MessageHandleService {
 
     Result<MessageHandle>  handleForNotify(MessageResult messageResult);
 

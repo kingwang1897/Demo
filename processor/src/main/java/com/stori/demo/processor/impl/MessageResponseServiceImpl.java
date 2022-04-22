@@ -10,7 +10,8 @@ import com.stori.demo.processor.model.MessageHandle;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.MessageResult;
 import com.stori.demo.processor.model.Result;
-import com.stori.demo.processor.service.MessageResponeService;
+import com.stori.demo.processor.service.MessageBaseService;
+import com.stori.demo.processor.service.MessageResponseService;
 import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +20,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-@Service("messageResponeService")
-public class MessageResponseServiceImpl implements MessageResponeService {
+@Service("messageResponseService")
+public class MessageResponseServiceImpl extends MessageBaseService implements MessageResponseService {
     protected final Logger logger = LoggerFactory.getLogger(MessageResponseServiceImpl.class);
 
     @Value("${message.parse.header}")
@@ -35,12 +36,9 @@ public class MessageResponseServiceImpl implements MessageResponeService {
     @Override
     public MessageLifecycle execute(MessageLifecycle messageLifecycle) {
         try {
-            if (messageLifecycle.getStatus().equals(MessageStatus.RESPONSEING)) {
+            if (!executeStart(messageLifecycle, MessageStatus.RESPONSEING)) {
                 return messageLifecycle;
             }
-            messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
-            messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-            messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
 
             // step 1: ISO8583 template
             MessageFactory<IsoMessage> mf = new MessageFactory<IsoMessage>();
@@ -72,13 +70,11 @@ public class MessageResponseServiceImpl implements MessageResponeService {
             }
 
             // step 3: response message result
-            messageLifecycle.setMessageResult(commonMessageGenarate(m));
-            messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-            messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
+            executeEnd(messageLifecycle, commonMessageGenarate(m), null);
             return messageLifecycle;
         } catch (Exception e) {
             logger.error("generateMsgByXml error,cause by: {}.", Throwables.getStackTraceAsString(e));
-            messageLifecycle.setStatus(MessageStatus.getPreStatus(messageLifecycle.getStatus()));
+            executeError(messageLifecycle, null);
             return  messageLifecycle;
         }
     }

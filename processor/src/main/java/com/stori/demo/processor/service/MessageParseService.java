@@ -3,7 +3,7 @@ package com.stori.demo.processor.service;
 
 import com.stori.demo.processor.model.MessageResult;
 
-public interface MessageParseService extends MessageBaseService {
+public interface MessageParseService {
 
     /**
      * parse header from pkt
