@@ -47,6 +47,7 @@ public class MessageHandleServiceImpl implements MessageHandleService {
                 return messageLifecycle;
         }
 
+        // step 2: handle result
         if (!helpResult.isSuccess()) {
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
             messageLifecycle.setHelpResult(helpResult);

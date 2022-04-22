@@ -23,6 +23,8 @@ public class Constant {
     public static String MESSAGE_ENCODING = "gbk";
 
     // Type Id
+    public final static Integer MESSAGE_TYPE_ID_CODE = 16;
+    public final static Integer MESSAGE_TYPE_ID_RESPONSE = 16;
     public final static String MESSAGE_TYPE_ID_MANGER = "0800";
     public final static String MESSAGE_TYPE_ID_USER = "0100";
     public final static String MESSAGE_TYPE_ID_NOTIFY = "0820";

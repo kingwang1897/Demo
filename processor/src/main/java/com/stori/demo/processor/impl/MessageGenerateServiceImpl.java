@@ -37,16 +37,18 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
             messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
             messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
+
+            // step 1: ISO8583 template
             MessageFactory<IsoMessage> mf = new MessageFactory<IsoMessage>();
             mf.setBinaryHeader(true);
             mf.setForceStringEncoding(true);
             mf.setConfigPath("j8583-templates-response.xml");
-
-            Integer messageType = Integer.parseInt(CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType()), 16) + 16;
+            Integer messageType = Integer.parseInt(CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType()), Constant.MESSAGE_TYPE_ID_CODE) + Constant.MESSAGE_TYPE_ID_RESPONSE;
             IsoMessage m = mf.newMessage(messageType);
             m.setIsoHeader(messageLifecycle.getMessageResult().getHeader());
             m.setForceSecondaryBitmap(true);
 
+            // step 2: generate response message
             Map<Integer, String> messageFileds;
             for (int i = Constant.MESSAGE_FIELD_MIN; i <= Constant.MESSAGE_FIELD_MAX; i++) {
                 if (m.hasField(i)) {
@@ -65,6 +67,7 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
                 }
             }
 
+            // step 3: response message result
             messageLifecycle.setMessageResult(commonMessageGenarate(m));
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
             messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);

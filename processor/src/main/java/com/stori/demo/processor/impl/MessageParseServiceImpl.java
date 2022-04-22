@@ -33,12 +33,15 @@ public class MessageParseServiceImpl implements MessageParseService {
         messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
         messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
         String pkt = messageLifecycle.getMessageResult().getPkt();
+
+        // step 1: header
         int headerLength = parseheader ? Constant.MESSAGE_HEADER_LENGTH_HEX : 0;
         if (pkt.isEmpty() || pkt.length() < headerLength + Constant.MESSAGE_TYPE_ID_LENGTH) {
             logger.error("parsePkt error, case by: msg is invalid, pkt is: {}.", pkt);
             messageLifecycle.setStatus(MessageStatus.FAILURE);
         }
 
+        // step 2: message parts
         Integer bitMapLength = CommonUtil.judgeBitMap(pkt.substring(headerLength + Constant.MESSAGE_TYPE_ID_LENGTH)) ? Constant.MESSAGE_BIT_MAP_LENGTH_EXTEND : Constant.MESSAGE_BIT_MAP_LENGTH;
         MessageResult messageResult = new MessageResult();
         messageResult.setHeader(parseheader ? pkt.substring(0, Constant.MESSAGE_HEADER_LENGTH_HEX) : "");
@@ -52,6 +55,7 @@ public class MessageParseServiceImpl implements MessageParseService {
                 .append(messageResult.getBitMap())
                 .append(CommonUtil.convertHexToString(messageResult.getMessageData()));
 
+        // step 3: message parse
         MessageResult parseResult = parseMsgByConfig(stringBuffer.toString(), headerLength);
         messageResult.setMessageFileds(parseResult.getMessageFileds());
         messageLifecycle.setMessageResult(messageResult);
