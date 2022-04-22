@@ -7,7 +7,7 @@ import com.stori.demo.processor.constant.MessageStatus;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.StoriMessage;
 import com.stori.demo.processor.mq.producer.service.MqProducerService;
-import com.stori.demo.processor.service.MessageBaseService;
+import com.stori.demo.processor.service.MessageSendService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 
 @Service("messageSendService")
-public class MessageSendServiceImpl implements MessageBaseService {
+public class MessageSendServiceImpl implements MessageSendService {
     protected final Logger logger = LoggerFactory.getLogger(MessageParseServiceImpl.class);
 
     @Autowired

@@ -1,5 +1,8 @@
 package com.stori.demo.processor.model;
 
+import com.stori.demo.processor.util.CommonUtil;
+
+import java.util.HashMap;
 import java.util.Map;
 
 public class MessageResult {
@@ -14,7 +17,7 @@ public class MessageResult {
 
     private String messageData;
 
-    private Map<Integer, String> messageFileds;
+    private Map<Integer, String> messageFileds = new HashMap<>();
 
     public String getPkt() {
         return pkt;
@@ -65,6 +68,7 @@ public class MessageResult {
     }
 
     public String getMessage() {
-        return header + type + bitMap + messageData;
+        String message = CommonUtil.getDefault(header) + CommonUtil.getDefault(type) + CommonUtil.getDefault(bitMap) + CommonUtil.getDefault(messageData);
+        return message.isEmpty() ? pkt : message;
     }
 }

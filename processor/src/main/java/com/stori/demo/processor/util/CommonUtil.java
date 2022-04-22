@@ -110,4 +110,8 @@ public class CommonUtil {
 
         return messageMap;
     }
+
+    public static String getDefault(String data) {
+        return data == null ? "" : data;
+    }
 }

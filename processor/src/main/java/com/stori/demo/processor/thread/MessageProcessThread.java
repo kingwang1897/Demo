@@ -54,6 +54,16 @@ public class MessageProcessThread extends Thread {
     }
 
     private void messageProcess(MessageLifecycle messageLifecycle) {
+        // retry more than 3
+        if (messageLifecycle.getCallCount() > Constant.MESSAGE_CALL_RETRY && !messageLifecycle.getStatus().equals(MessageStatus.DONE)
+        && !messageLifecycle.getStatus().equals(MessageStatus.FAILURE)) {
+            logger.error("messageProcess error, cause by: retry more 3 times, status is : {}, messageId is: {}.", messageLifecycle.getStatus().name(), messageLifecycle.getMessageId());
+            // sending fail, update DONE, other update FAILURE.
+            messageLifecycle.setStatus(messageLifecycle.getStatus().equals(MessageStatus.SENDING) ? MessageStatus.DONE : MessageStatus.FAILURE);
+            messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
+            return;
+        }
+
         switch (messageLifecycle.getStatus()) {
             case PREPARSE:
                 messageParseService.execute(messageLifecycle);
@@ -71,20 +81,12 @@ public class MessageProcessThread extends Thread {
                 logger.error("messageProcess error, messageLifecycle id is: {}.", messageLifecycle.getStatus().getName());
                 // add failure status
                 messageLifecycle.getMessageResult().getMessageFileds().put(Constant.MESSAGE_CODE_ERROR, messageLifecycle.getStatus().name());
-                messageLifecycle.setStatus(MessageStatus.SENDING);
+                messageLifecycle.setStatus(MessageStatus.PRESEND);
                 break;
             case DONE:
                 concurrentHashMap.remove(messageLifecycle.getMessageId());
                 break;
             default:
-                if (messageLifecycle.getCallCount() > Constant.MESSAGE_CALL_RETRY) {
-                    // retry more than 3
-                    logger.error("messageProcess error, cause by: retry more 3 times, status is : {}, messageId is: {}.", messageLifecycle.getStatus().name(), messageLifecycle.getMessageId());
-                    // sending fail, update DONE, other update FAILURE.
-                    messageLifecycle.setStatus(messageLifecycle.getStatus().equals(MessageStatus.SENDING) ? MessageStatus.DONE : MessageStatus.FAILURE);
-                    return;
-                }
-
                 if (System.currentTimeMillis() > messageLifecycle.getMessageProcessorTime() + messageLifecycle.getStatus().getTimeout()) {
                     messageLifecycle.setStatus(MessageStatus.getPreStatus(messageLifecycle.getStatus()));
                 }

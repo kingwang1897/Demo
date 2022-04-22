@@ -1,5 +1,6 @@
 package com.stori.demo.processor.manager;
 
+import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
 import com.stori.demo.processor.impl.MessageParseServiceImpl;
 import com.stori.demo.processor.model.MessageLifecycle;
@@ -48,8 +49,8 @@ public class MessageManager {
         }
 
         messageLifecycle.setStatus(MessageStatus.PREPARSE);
+        messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
         concurrentHashMap.put(messageLifecycle.getMessageId(), messageLifecycle);
-
         if (messageProcessThread == null) {
             init();
         }
