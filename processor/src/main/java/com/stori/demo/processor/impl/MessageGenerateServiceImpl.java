@@ -7,6 +7,7 @@ import com.solab.iso8583.MessageFactory;
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
 import com.stori.demo.processor.model.HelpResult;
+import com.stori.demo.processor.model.MessageHandle;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.MessageResult;
 import com.stori.demo.processor.service.MessageGenerateService;
@@ -15,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service("messageGenerateService")
 public class MessageGenerateServiceImpl implements MessageGenerateService {
@@ -34,27 +37,37 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
             messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
             messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
+
+            // step 1: ISO8583 template
             MessageFactory<IsoMessage> mf = new MessageFactory<IsoMessage>();
             mf.setBinaryHeader(true);
             mf.setForceStringEncoding(true);
             mf.setConfigPath("j8583-templates-response.xml");
-
-            Integer messageType = Integer.parseInt(CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType()), 16) + 16;
+            Integer messageType = Integer.parseInt(CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType()), Constant.MESSAGE_TYPE_ID_CODE) + Constant.MESSAGE_TYPE_ID_RESPONSE;
             IsoMessage m = mf.newMessage(messageType);
             m.setIsoHeader(messageLifecycle.getMessageResult().getHeader());
             m.setForceSecondaryBitmap(true);
-            for (int i = 2; i <= 128; i++) {
+
+            // step 2: generate response message
+            Map<Integer, String> messageFileds;
+            for (int i = Constant.MESSAGE_FIELD_MIN; i <= Constant.MESSAGE_FIELD_MAX; i++) {
                 if (m.hasField(i)) {
-                    if (i == 38) {
-                        m.setValue(i, messageLifecycle.getHelpResult().isSuccess() ? messageLifecycle.getHelpResult().getData() : "0" , IsoType.ALPHA, 6);
-                    } else if (i == 39) {
-                        m.setValue(i, messageLifecycle.getHelpResult().isSuccess() ? Constant.MESSAGE_RESULT_SUCCESS : Constant.MESSAGE_RESULT_FAILURE, IsoType.ALPHA, 2);
-                    } else {
+                    if (!m.getField(i).isNeedUpdate()) {
                         m.setValue(i, messageLifecycle.getMessageResult().getMessageFileds().get(i), m.getField(i).getType(), m.getField(i).getLength());
+                        continue;
                     }
+
+                    messageFileds = ((MessageHandle)messageLifecycle.getHelpResult().getData()).getMessageFileds();
+                    if (messageFileds == null || !messageFileds.containsKey(i)) {
+                        logger.error("generateMsgByXml error, cause by:{MessageHandle messageFileds is null}.");
+                        continue;
+                    }
+
+                    m.setValue(i, messageFileds.get(i), m.getField(i).getType(), m.getField(i).getLength());
                 }
             }
 
+            // step 3: response message result
             messageLifecycle.setMessageResult(commonMessageGenarate(m));
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
             messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);

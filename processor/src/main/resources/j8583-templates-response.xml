@@ -42,8 +42,8 @@
         <field num="33" type="LLVAR" length="11" />
         <!--Retrieval Reference Number-->
         <field num="37" type="ALPHA" length="12" />
-        <field num="38" type="ALPHA" length="6" />
-        <field num="39" type="ALPHA" length="2" />
+        <field num="38" type="ALPHA" length="6" needUpdate="true" />
+        <field num="39" type="ALPHA" length="2" needUpdate="true" />
         <!--Card Acceptor Terminal Identification Terminal ID-->
         <field num="41" type="ALPHA" length="8" />
         <!--CAIC Merchant ID-->
@@ -70,8 +70,8 @@
     <!--    base-->
     <template type="0801">
         <field num="7" type="DATE10" length="10" />
-        <field num="11" type="NUMERIC" length="6" />
-        <field num="39" type="ALPHA" length="2" />
+        <field num="11" type="NUMERIC" length="6"  />
+        <field num="39" type="ALPHA" length="2"  needUpdate="true" />
         <field num="70" type="NUMERIC" length="3" />
         <field num="100" type="LLVAR" length="11" />
     </template>

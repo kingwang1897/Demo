@@ -19,15 +19,11 @@ License along with this library; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.solab.iso8583.IsoType;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public enum IsoFields {
     // |Field title     |no|desc    |type  |len  |fixed  |format|
@@ -96,7 +92,7 @@ public enum IsoFields {
     // Secondary BitMap,
     F70(70, "Network Management Information Code", "n", 3, true, IsoType.NUMERIC),
     F90(90, "Original Data Elements", "an", 42, false, IsoType.NUMERIC),
-    F96(96, "Message Security Code", "b", 64, false, IsoType.NUMERIC),
+    F96(96, "Message Security Code", "b", 8, false, IsoType.ALPHA),
     F100(100, "Receiving Institution Identification Code", "an", 11, false, IsoType.LLVAR),
     F102(102, "Account Identification 1", "an", 28, false, IsoType.LLVAR),
     F103(103, "Account Identification 2", "an", 28, false, IsoType.LLVAR),
@@ -109,7 +105,7 @@ public enum IsoFields {
     F123(123, "Issuer Institution Reserved", "ans", 100, false, IsoType.LLLVAR),
     F125(125, "Additional Data", "ansb", 256, false, IsoType.LLLVAR),
     F126(126, "Additional Data", "ansb", 256, false, IsoType.LLLVAR),
-    F128(128, "Message Authentication Code (MAC)", "b", 64, true, IsoType.NUMERIC);
+    F128(128, "Message Authentication Code (MAC)", "b", 8, true, IsoType.ALPHA);
 
 
     private final int no;

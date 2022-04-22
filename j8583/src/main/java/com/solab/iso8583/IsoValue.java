@@ -18,15 +18,15 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA
 */
 package com.solab.iso8583;
 
+import com.solab.iso8583.util.Bcd;
+import com.solab.iso8583.util.HexCodec;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Date;
 import java.util.TimeZone;
-
-import com.solab.iso8583.util.Bcd;
-import com.solab.iso8583.util.HexCodec;
 
 /** Represents a value that is stored in a field inside an ISO8583 message.
  * It can format the value when the message is generated.
@@ -45,6 +45,7 @@ public class IsoValue<T> implements Cloneable {
 	private int length;
 	private String encoding;
     private TimeZone tz;
+	private boolean needUpdate;
     private boolean variableLengthFieldsInHex;
 
 	public IsoValue(IsoType t, T value) {
@@ -193,6 +194,14 @@ public class IsoValue<T> implements Cloneable {
     public TimeZone getTimeZone() {
         return tz;
     }
+
+	public boolean isNeedUpdate() {
+		return needUpdate;
+	}
+
+	public void setNeedUpdate(boolean needUpdate) {
+		this.needUpdate = needUpdate;
+	}
 
 	/** Returns the formatted value as a String. The formatting depends on the type of the
 	 * receiver. */
