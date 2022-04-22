@@ -1,17 +1,9 @@
 package com.stori.demo.processor.service;
 
 
-import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.MessageResult;
 
 public interface MessageParseService {
-
-    /**
-     * parse pkt(contain header and msg)
-     *
-     * @return
-     */
-    MessageLifecycle parsePkt(MessageLifecycle messageLifecycle);
 
     /**
      * parse header from pkt

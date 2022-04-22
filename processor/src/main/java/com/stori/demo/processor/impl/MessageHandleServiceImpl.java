@@ -2,10 +2,11 @@ package com.stori.demo.processor.impl;
 
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
-import com.stori.demo.processor.model.HelpResult;
 import com.stori.demo.processor.model.MessageHandle;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.MessageResult;
+import com.stori.demo.processor.model.Result;
+import com.stori.demo.processor.service.MessageBaseService;
 import com.stori.demo.processor.service.MessageHandleService;
 import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
@@ -20,26 +21,32 @@ import java.util.Map;
  *
  */
 @Service("messageHandleService")
-public class MessageHandleServiceImpl implements MessageHandleService {
+public class MessageHandleServiceImpl extends MessageBaseService implements MessageHandleService {
     protected final Logger logger = LoggerFactory.getLogger(MessageParseServiceImpl.class);
 
+    /**
+     * handle message
+     *
+     * @param messageLifecycle
+     * @return
+     */
     @Override
-    public MessageLifecycle messageHandle(MessageLifecycle messageLifecycle) {
-        messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
-        messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-        messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
+    public MessageLifecycle execute(MessageLifecycle messageLifecycle) {
+        if (!executeStart(messageLifecycle, MessageStatus.HANDLEING)) {
+            return messageLifecycle;
+        }
 
         // step 1: handle messageResult
-        HelpResult<MessageHandle> helpResult;
+        Result<MessageHandle> result;
         switch (CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType())) {
             case Constant.MESSAGE_TYPE_ID_MANGER:
-                helpResult = handleForManager(messageLifecycle.getMessageResult());
+                result = handleForManager(messageLifecycle.getMessageResult());
                 break;
             case Constant.MESSAGE_TYPE_ID_USER:
-                helpResult = handleForUser(messageLifecycle.getMessageResult());
+                result = handleForUser(messageLifecycle.getMessageResult());
                 break;
             case Constant.MESSAGE_TYPE_ID_NOTIFY:
-                helpResult = handleForNotify(messageLifecycle.getMessageResult());
+                result = handleForNotify(messageLifecycle.getMessageResult());
                 break;
             default:
                 logger.error("messageHandle error, case by: no message type, type is:{}.", CommonUtil.convertHexToString(messageLifecycle.getMessageResult().getType()));
@@ -47,40 +54,39 @@ public class MessageHandleServiceImpl implements MessageHandleService {
                 return messageLifecycle;
         }
 
-        // step 2: handle result
-        if (!helpResult.isSuccess()) {
-            messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-            messageLifecycle.setHelpResult(helpResult);
+        // step 2: failure result
+        if (!result.isSuccess()) {
+            executeError(messageLifecycle, result);
             return messageLifecycle;
         }
 
-        messageLifecycle.setHelpResult(helpResult);
-        messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-        messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
+        // step 3: success result
+        messageLifecycle.setResult(result);
+        executeEnd(messageLifecycle, null, result);
         return messageLifecycle;
     }
 
     @Override
-    public HelpResult<MessageHandle>  handleForNotify(MessageResult messageResult) {
-        return HelpResult.ok(new MessageHandle(messageResult.getType()));
+    public Result<MessageHandle>  handleForNotify(MessageResult messageResult) {
+        return Result.ok(new MessageHandle(messageResult.getType()));
     }
 
     @Override
-    public HelpResult<MessageHandle>  handleForManager(MessageResult messageResult) {
+    public Result<MessageHandle>  handleForManager(MessageResult messageResult) {
         MessageHandle messageHandle = new MessageHandle(messageResult.getType());
         Map<Integer, String> messageFileds = new HashMap<>();
         messageHandle.setMessageFileds(messageFileds);
         messageFileds.put(Constant.MESSAGE_RESPONSE_ID, Constant.MESSAGE_RESULT_SUCCESS);
-        return HelpResult.ok(messageHandle);
+        return Result.ok(messageHandle);
     }
 
     @Override
-    public HelpResult<MessageHandle>  handleForUser(MessageResult messageResult){
+    public Result<MessageHandle>  handleForUser(MessageResult messageResult){
         MessageHandle messageHandle = new MessageHandle(messageResult.getType());
         Map<Integer, String> messageFileds = new HashMap<>();
         messageHandle.setMessageFileds(messageFileds);
         messageFileds.put(Constant.MESSAGE_RESPONSE_ID, Constant.MESSAGE_RESULT_SUCCESS);
         messageFileds.put(Constant.MESSAGE_RESPONSE_AUTH_ID, Constant.MESSAGE_RESPONSE_AUTH_SUCCESS);
-        return HelpResult.ok(messageHandle);
+        return Result.ok(messageHandle);
     }
 }

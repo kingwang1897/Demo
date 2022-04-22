@@ -8,6 +8,7 @@ import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.MessageResult;
+import com.stori.demo.processor.service.MessageBaseService;
 import com.stori.demo.processor.service.MessageParseService;
 import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
@@ -16,7 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service("messageParseService")
-public class MessageParseServiceImpl implements MessageParseService {
+public class MessageParseServiceImpl extends MessageBaseService implements MessageParseService  {
     protected final Logger logger = LoggerFactory.getLogger(MessageParseServiceImpl.class);
 
     @Value("${message.parse.header}")
@@ -25,16 +26,17 @@ public class MessageParseServiceImpl implements MessageParseService {
     /**
      * parse pkt(contain header and msg)
      *
+     * @param messageLifecycle
      * @return
      */
     @Override
-    public MessageLifecycle parsePkt(MessageLifecycle messageLifecycle) {
-        messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
-        messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-        messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
-        String pkt = messageLifecycle.getMessageResult().getPkt();
+    public MessageLifecycle execute(MessageLifecycle messageLifecycle) {
+        if (!executeStart(messageLifecycle, MessageStatus.PARSEING)) {
+            return messageLifecycle;
+        }
 
         // step 1: header
+        String pkt = messageLifecycle.getMessageResult().getPkt();
         int headerLength = parseheader ? Constant.MESSAGE_HEADER_LENGTH_HEX : 0;
         if (pkt.isEmpty() || pkt.length() < headerLength + Constant.MESSAGE_TYPE_ID_LENGTH) {
             logger.error("parsePkt error, case by: msg is invalid, pkt is: {}.", pkt);
@@ -57,11 +59,36 @@ public class MessageParseServiceImpl implements MessageParseService {
 
         // step 3: message parse
         MessageResult parseResult = parseMsgByConfig(stringBuffer.toString(), headerLength);
+        if (parseResult == null) {
+            logger.error("MessageParseService execute error");
+            executeError(messageLifecycle, null);
+            return messageLifecycle;
+        }
         messageResult.setMessageFileds(parseResult.getMessageFileds());
-        messageLifecycle.setMessageResult(messageResult);
-        messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
-        messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
+        executeEnd(messageLifecycle, messageResult, null);
         return messageLifecycle;
+    }
+
+    /**
+     * parse msg by config
+     *
+     * @return
+     */
+    private MessageResult parseMsgByConfig(String msg, int headerLength) {
+        try {
+            MessageFactory messageFactory = ConfigParser.createFromClasspathConfig("j8583-templates-request.xml");
+            messageFactory.setCharacterEncoding(Constant.MESSAGE_ENCODING);
+            messageFactory.setForceStringEncoding(true);
+
+            //解析报文
+            IsoMessage isoMessage = messageFactory.parseMessage(msg.getBytes(), headerLength);
+            MessageResult messageResult = new MessageResult();
+            messageResult.setMessageFileds(CommonUtil.convertMap(isoMessage));
+            return messageResult;
+        } catch (Exception e) {
+            logger.error("MessageParseService parseMsgByConfig error, cause by: {}.", Throwables.getStackTraceAsString(e));
+            return null;
+        }
     }
 
     /**
@@ -113,27 +140,5 @@ public class MessageParseServiceImpl implements MessageParseService {
     public MessageResult parseMsgByConfig(String msg) {
 
         return null;
-    }
-
-    /**
-     * parse msg by config
-     *
-     * @return
-     */
-    private MessageResult parseMsgByConfig(String msg, int headerLength) {
-        try {
-            MessageFactory messageFactory = ConfigParser.createFromClasspathConfig("j8583-templates-request.xml");
-            messageFactory.setCharacterEncoding(Constant.MESSAGE_ENCODING);
-            messageFactory.setForceStringEncoding(true);
-
-            //解析报文
-            IsoMessage isoMessage = messageFactory.parseMessage(msg.getBytes(), headerLength);
-            MessageResult messageResult = new MessageResult();
-            messageResult.setMessageFileds(CommonUtil.convertMap(isoMessage));
-            return messageResult;
-        } catch (Exception e) {
-            logger.error("parseMsgByConfig error, cause by: {}.", Throwables.getStackTraceAsString(e));
-            return null;
-        }
     }
 }

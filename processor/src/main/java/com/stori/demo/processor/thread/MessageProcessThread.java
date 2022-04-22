@@ -3,11 +3,11 @@ package com.stori.demo.processor.thread;
 import com.google.common.base.Throwables;
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
-import com.stori.demo.processor.listener.MessageMqSender;
+import com.stori.demo.processor.impl.MessageHandleServiceImpl;
+import com.stori.demo.processor.impl.MessageParseServiceImpl;
+import com.stori.demo.processor.impl.MessageResponseServiceImpl;
+import com.stori.demo.processor.impl.MessageSendServiceImpl;
 import com.stori.demo.processor.model.MessageLifecycle;
-import com.stori.demo.processor.service.MessageGenerateService;
-import com.stori.demo.processor.service.MessageHandleService;
-import com.stori.demo.processor.service.MessageParseService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,23 +18,23 @@ public class MessageProcessThread extends Thread {
 
     private Map<String, MessageLifecycle> concurrentHashMap;
 
-    private MessageParseService messageParseService;
+    private MessageParseServiceImpl messageParseService;
 
-    private MessageHandleService messageHandleService;
+    private MessageHandleServiceImpl messageHandleService;
 
-    private MessageGenerateService messageGenerateService;
+    private MessageResponseServiceImpl messageResponseService;
 
-    private MessageMqSender messageMqSender;
+    private MessageSendServiceImpl messageSendService;
 
-    public MessageProcessThread (MessageParseService messageParseService,
-                                 MessageHandleService messageHandleService,
-                                 MessageGenerateService messageGenerateService,
-                                 MessageMqSender messageMqSender,
+    public MessageProcessThread (MessageParseServiceImpl messageParseService,
+                                 MessageHandleServiceImpl messageHandleService,
+                                 MessageResponseServiceImpl messageResponseService,
+                                 MessageSendServiceImpl messageSendService,
                                  Map<String, MessageLifecycle> concurrentHashMap) {
         this.messageParseService = messageParseService;
         this.messageHandleService = messageHandleService;
-        this.messageGenerateService = messageGenerateService;
-        this.messageMqSender = messageMqSender;
+        this.messageResponseService = messageResponseService;
+        this.messageSendService = messageSendService;
         this.concurrentHashMap = concurrentHashMap;
     }
 
@@ -56,29 +56,27 @@ public class MessageProcessThread extends Thread {
     private void messageProcess(MessageLifecycle messageLifecycle) {
         switch (messageLifecycle.getStatus()) {
             case PREPARSE:
-                messageParseService.parsePkt(messageLifecycle);
+                messageParseService.execute(messageLifecycle);
                 break;
             case PREHANDLE:
-                messageHandleService.messageHandle(messageLifecycle);
+                messageHandleService.execute(messageLifecycle);
                 break;
             case PRERESPONSE:
-                messageGenerateService.generateMsgByXml(messageLifecycle);
+                messageResponseService.execute(messageLifecycle);
                 break;
             case PRESEND:
-                messageMqSender.messageSender(messageLifecycle);
+                messageSendService.execute(messageLifecycle);
+                break;
+            case FAILURE:
+                logger.error("messageProcess error, messageLifecycle id is: {}.", messageLifecycle.getStatus().getName());
+                // add failure status
+                messageLifecycle.getMessageResult().getMessageFileds().put(Constant.MESSAGE_CODE_ERROR, messageLifecycle.getStatus().name());
+                messageLifecycle.setStatus(MessageStatus.PRESEND);
                 break;
             case DONE:
-            case FAILURE:
                 concurrentHashMap.remove(messageLifecycle.getMessageId());
                 break;
             default:
-                if (messageLifecycle.getCallCount() > Constant.MESSAGE_CALL_RETRY) {
-                    // retry more than 3
-                    logger.error("messageProcess error, cause by: retry more 3 times, status is : {}, messageId is: {}.", messageLifecycle.getStatus().name(), messageLifecycle.getMessageId());
-                    messageLifecycle.setStatus(MessageStatus.FAILURE);
-                    return;
-                }
-
                 if (System.currentTimeMillis() > messageLifecycle.getMessageProcessorTime() + messageLifecycle.getStatus().getTimeout()) {
                     messageLifecycle.setStatus(MessageStatus.getPreStatus(messageLifecycle.getStatus()));
                 }

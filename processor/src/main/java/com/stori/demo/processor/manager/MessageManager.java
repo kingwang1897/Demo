@@ -1,11 +1,12 @@
 package com.stori.demo.processor.manager;
 
+import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
-import com.stori.demo.processor.listener.MessageMqSender;
+import com.stori.demo.processor.impl.MessageHandleServiceImpl;
+import com.stori.demo.processor.impl.MessageParseServiceImpl;
+import com.stori.demo.processor.impl.MessageResponseServiceImpl;
+import com.stori.demo.processor.impl.MessageSendServiceImpl;
 import com.stori.demo.processor.model.MessageLifecycle;
-import com.stori.demo.processor.service.MessageGenerateService;
-import com.stori.demo.processor.service.MessageHandleService;
-import com.stori.demo.processor.service.MessageParseService;
 import com.stori.demo.processor.thread.MessageProcessThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,20 +25,20 @@ public class MessageManager {
     private MessageProcessThread messageProcessThread;
 
     @Autowired
-    private MessageParseService messageParseService;
+    private MessageParseServiceImpl messageParseService;
 
     @Autowired
-    private MessageHandleService messageHandleService;
+    private MessageHandleServiceImpl messageHandleService;
 
     @Autowired
-    private MessageGenerateService messageGenerateService;
+    private MessageResponseServiceImpl messageResponseService;
 
     @Autowired
-    private MessageMqSender messageMqSender;
+    private MessageSendServiceImpl messageSendService;
 
     public void init() {
         messageProcessThread = new MessageProcessThread(messageParseService,
-                messageHandleService, messageGenerateService, messageMqSender, concurrentHashMap);
+                messageHandleService, messageResponseService, messageSendService, concurrentHashMap);
         messageProcessThread.start();
     }
 
@@ -48,8 +49,8 @@ public class MessageManager {
         }
 
         messageLifecycle.setStatus(MessageStatus.PREPARSE);
+        messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
         concurrentHashMap.put(messageLifecycle.getMessageId(), messageLifecycle);
-
         if (messageProcessThread == null) {
             init();
         }

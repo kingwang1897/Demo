@@ -42,5 +42,8 @@ public class Constant {
 
     // lifecycle
     public final static Integer MESSAGE_CALL_INIT = 1;
-    public final static Integer MESSAGE_CALL_RETRY = 4;
+    public final static Integer MESSAGE_CALL_RETRY = 3;
+
+    // exception
+    public final static Integer MESSAGE_CODE_ERROR = 999;
 }
