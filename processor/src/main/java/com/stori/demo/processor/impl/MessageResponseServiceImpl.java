@@ -6,11 +6,11 @@ import com.solab.iso8583.IsoType;
 import com.solab.iso8583.MessageFactory;
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
-import com.stori.demo.processor.model.HelpResult;
 import com.stori.demo.processor.model.MessageHandle;
 import com.stori.demo.processor.model.MessageLifecycle;
 import com.stori.demo.processor.model.MessageResult;
-import com.stori.demo.processor.service.MessageGenerateService;
+import com.stori.demo.processor.model.Result;
+import com.stori.demo.processor.service.MessageResponeService;
 import com.stori.demo.processor.util.CommonUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,21 +19,25 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
-@Service("messageGenerateService")
-public class MessageGenerateServiceImpl implements MessageGenerateService {
-    protected final Logger logger = LoggerFactory.getLogger(MessageGenerateServiceImpl.class);
+@Service("messageResponeService")
+public class MessageResponseServiceImpl implements MessageResponeService {
+    protected final Logger logger = LoggerFactory.getLogger(MessageResponseServiceImpl.class);
 
     @Value("${message.parse.header}")
     private boolean parseheader;
 
     /**
-     * generate by xml
+     * generate message
      *
+     * @param messageLifecycle
      * @return
      */
     @Override
-    public MessageLifecycle generateMsgByXml(MessageLifecycle messageLifecycle) {
+    public MessageLifecycle execute(MessageLifecycle messageLifecycle) {
         try {
+            if (messageLifecycle.getStatus().equals(MessageStatus.RESPONSEING)) {
+                return messageLifecycle;
+            }
             messageLifecycle.setCallCount(messageLifecycle.getCallCount() + Constant.MESSAGE_CALL_INIT);
             messageLifecycle.setStatus(MessageStatus.getNextStatus(messageLifecycle.getStatus()));
             messageLifecycle.setMessageProcessorTime(System.currentTimeMillis());
@@ -57,7 +61,7 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
                         continue;
                     }
 
-                    messageFileds = ((MessageHandle)messageLifecycle.getHelpResult().getData()).getMessageFileds();
+                    messageFileds = ((MessageHandle)messageLifecycle.getResult().getData()).getMessageFileds();
                     if (messageFileds == null || !messageFileds.containsKey(i)) {
                         logger.error("generateMsgByXml error, cause by:{MessageHandle messageFileds is null}.");
                         continue;
@@ -85,7 +89,7 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
      * @return
      */
     @Override
-    public HelpResult<MessageResult> generateMsgByConfig(MessageResult requestMessage, HelpResult result) {
+    public Result<MessageResult> generateMsgByConfig(MessageResult requestMessage, Result result) {
         String respone = result.isSuccess() ? Constant.MESSAGE_RESULT_SUCCESS : Constant.MESSAGE_RESULT_FAILURE;
 
         MessageFactory<IsoMessage> mf = new MessageFactory<IsoMessage>();
@@ -104,7 +108,7 @@ public class MessageGenerateServiceImpl implements MessageGenerateService {
         m.setIsoHeader(requestMessage.getHeader());
         m.setForceSecondaryBitmap(true);
 
-        return HelpResult.ok(commonMessageGenarate(m));
+        return Result.ok(commonMessageGenarate(m));
     }
 
     private MessageResult commonMessageGenarate(IsoMessage m) {

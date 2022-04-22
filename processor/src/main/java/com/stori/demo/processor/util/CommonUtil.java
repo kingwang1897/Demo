@@ -17,6 +17,9 @@ public class CommonUtil {
         char[] chars = str.toCharArray();
         StringBuffer hex = new StringBuffer();
         for(int i = 0; i < chars.length; i++){
+            if (Integer.toHexString((int)chars[i]).length() == 1) {
+                hex.append("0");
+            }
             hex.append(Integer.toHexString((int)chars[i]));
         }
 

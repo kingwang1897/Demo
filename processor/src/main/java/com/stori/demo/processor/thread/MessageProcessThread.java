@@ -3,11 +3,11 @@ package com.stori.demo.processor.thread;
 import com.google.common.base.Throwables;
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.constant.MessageStatus;
-import com.stori.demo.processor.listener.MessageMqSender;
 import com.stori.demo.processor.model.MessageLifecycle;
-import com.stori.demo.processor.service.MessageGenerateService;
 import com.stori.demo.processor.service.MessageHandleService;
 import com.stori.demo.processor.service.MessageParseService;
+import com.stori.demo.processor.service.MessageResponeService;
+import com.stori.demo.processor.service.MessageSendService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,19 +22,19 @@ public class MessageProcessThread extends Thread {
 
     private MessageHandleService messageHandleService;
 
-    private MessageGenerateService messageGenerateService;
+    private MessageResponeService messageResponeService;
 
-    private MessageMqSender messageMqSender;
+    private MessageSendService messageSendService;
 
     public MessageProcessThread (MessageParseService messageParseService,
                                  MessageHandleService messageHandleService,
-                                 MessageGenerateService messageGenerateService,
-                                 MessageMqSender messageMqSender,
+                                 MessageResponeService messageResponeService,
+                                 MessageSendService messageSendService,
                                  Map<String, MessageLifecycle> concurrentHashMap) {
         this.messageParseService = messageParseService;
         this.messageHandleService = messageHandleService;
-        this.messageGenerateService = messageGenerateService;
-        this.messageMqSender = messageMqSender;
+        this.messageResponeService = messageResponeService;
+        this.messageSendService = messageSendService;
         this.concurrentHashMap = concurrentHashMap;
     }
 
@@ -56,26 +56,32 @@ public class MessageProcessThread extends Thread {
     private void messageProcess(MessageLifecycle messageLifecycle) {
         switch (messageLifecycle.getStatus()) {
             case PREPARSE:
-                messageParseService.parsePkt(messageLifecycle);
+                messageParseService.execute(messageLifecycle);
                 break;
             case PREHANDLE:
-                messageHandleService.messageHandle(messageLifecycle);
+                messageHandleService.execute(messageLifecycle);
                 break;
             case PRERESPONSE:
-                messageGenerateService.generateMsgByXml(messageLifecycle);
+                messageResponeService.execute(messageLifecycle);
                 break;
             case PRESEND:
-                messageMqSender.messageSender(messageLifecycle);
+                messageSendService.execute(messageLifecycle);
+                break;
+            case FAILURE:
+                logger.error("messageProcess error, messageLifecycle id is: {}.", messageLifecycle.getStatus().getName());
+                // add failure status
+                messageLifecycle.getMessageResult().getMessageFileds().put(Constant.MESSAGE_CODE_ERROR, messageLifecycle.getStatus().name());
+                messageLifecycle.setStatus(MessageStatus.SENDING);
                 break;
             case DONE:
-            case FAILURE:
                 concurrentHashMap.remove(messageLifecycle.getMessageId());
                 break;
             default:
                 if (messageLifecycle.getCallCount() > Constant.MESSAGE_CALL_RETRY) {
                     // retry more than 3
                     logger.error("messageProcess error, cause by: retry more 3 times, status is : {}, messageId is: {}.", messageLifecycle.getStatus().name(), messageLifecycle.getMessageId());
-                    messageLifecycle.setStatus(MessageStatus.FAILURE);
+                    // sending fail, update DONE, other update FAILURE.
+                    messageLifecycle.setStatus(messageLifecycle.getStatus().equals(MessageStatus.SENDING) ? MessageStatus.DONE : MessageStatus.FAILURE);
                     return;
                 }
 

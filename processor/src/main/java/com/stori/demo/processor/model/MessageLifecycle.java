@@ -11,11 +11,13 @@ public class MessageLifecycle {
 
     private String socketId;
 
+    private String message;
+
     private MessageStatus status;
 
     private MessageResult messageResult;
 
-    private HelpResult helpResult;
+    private Result Result;
 
     private Long messageProcessorTime;
 
@@ -25,6 +27,7 @@ public class MessageLifecycle {
         this.messageChannel = messageChannel;
         this.socketId = socketId;
         this.messageId = messageId;
+        this.message = message;
         MessageResult messageResult = new MessageResult();
         messageResult.setPkt(message);
         this.messageResult = messageResult;
@@ -36,6 +39,14 @@ public class MessageLifecycle {
 
     public void setMessageId(String messageId) {
         this.messageId = messageId;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     public MessageStatus getStatus() {
@@ -70,12 +81,12 @@ public class MessageLifecycle {
         this.messageProcessorTime = messageProcessorTime;
     }
 
-    public HelpResult getHelpResult() {
-        return helpResult;
+    public Result getResult() {
+        return Result;
     }
 
-    public void setHelpResult(HelpResult helpResult) {
-        this.helpResult = helpResult;
+    public void setResult(Result Result) {
+        this.Result = Result;
     }
 
     public String getMessageChannel() {

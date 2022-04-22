@@ -1,4 +1,4 @@
-package com.stori.demo.processor.listener;
+package com.stori.demo.processor.impl;
 
 import com.stori.demo.processor.constant.Constant;
 import com.stori.demo.processor.manager.MessageManager;
@@ -9,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MessageMqListener implements MessageProcessService {
+public class MessageConsumerServiceImpl implements MessageProcessService {
 
     @Autowired
     private MessageManager messageManager;
