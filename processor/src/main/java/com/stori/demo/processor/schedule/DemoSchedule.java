@@ -10,6 +10,8 @@ public class DemoSchedule {
     @Autowired
     private MessageProcessService messageProcessService;
 
+    private  int i = 0;
+
 //    @Scheduled(fixedDelay = 1000L)
 //    public void demo() {
 //        System.out.println("Start!!!");
@@ -21,7 +23,7 @@ public class DemoSchedule {
 //        String message_1200 = "";
 //
 //        StoriMessage request = new StoriMessage();
-//        request.setMessageId("123456");
+//        request.setMessageId("123456" + i++);
 //        request.setSocketId("111000");
 //        request.setMessageChannel("123456");
 //        request.setOriginMessage(message_0100);
