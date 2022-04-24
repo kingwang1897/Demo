@@ -58,10 +58,6 @@ public class MessageManager {
         messageLifecycle.setStatus(MessageStatus.PREPARSE);
         messageLifecycle.setCallCount(Constant.MESSAGE_CALL_INIT);
         concurrentHashMap.put(messageLifecycle.getMessageId(), messageLifecycle);
-
-        MessageProcessThread messageProcessThread = new MessageProcessThread(messageParseService, messageHandleService, messageResponseService,
-                messageSendService, messageLifecycle);
-        executor.execute(messageProcessThread);
     }
 
     /**
